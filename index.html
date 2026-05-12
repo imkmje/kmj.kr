@@ -1131,7 +1131,13 @@ function renderAboutCards(cards) {
         <button class="tag-add-btn" onclick="addAcardTag(this,'${tagColor}')">+ 태그</button>
       </div>`;
     grid.appendChild(card);
-    requestAnimationFrame(() => io.observe(card));
+    requestAnimationFrame(() => {
+      io.observe(card);
+      if (document.body.classList.contains('admin-mode')) {
+        registerEditable(card.querySelector('h3'));
+        registerEditable(card.querySelector('p'));
+      }
+    });
   });
 }
 
@@ -1304,7 +1310,13 @@ function renderCareerItems(items) {
       <div class="career-title editable-career-title">${item.title}</div>
       <div class="career-item-admin"><button class="career-del-btn" onclick="delCareer(this)">✕</button></div>`;
     list.appendChild(el);
-    requestAnimationFrame(() => io.observe(el));
+    requestAnimationFrame(() => {
+      io.observe(el);
+      if (document.body.classList.contains('admin-mode')) {
+        registerEditable(el.querySelector('.career-year'));
+        registerEditable(el.querySelector('.career-title'));
+      }
+    });
   });
 }
 
@@ -1443,6 +1455,8 @@ function enterAdminMode() {
 let _textEditTarget = null;
 
 function registerEditable(el) {
+  if (!el) return;
+  if (el._adminHandler) return; // 중복 등록 방지
   el.style.outline      = '2px solid #3b7df8';
   el.style.borderRadius = '6px';
   el.style.cursor       = 'pointer';
