@@ -1078,7 +1078,12 @@ document.querySelectorAll('.cdui-toggle').forEach(el => el.classList.add('toggle
 /* ══════════════════════════════════════
    Admin Mode
 ══════════════════════════════════════ */
-const ADMIN_HASH = 'b0ec4be11244be25fc9249d03040446fe55260e8965bb09e85ffe0f3a1d92d22';
+function hashPw(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = (Math.imul(h, 31) + str.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(16);
+}
+const ADMIN_HASH = '5188168d';
 
 if (new URLSearchParams(location.search).has('edit')) {
   document.getElementById('pwModal').style.display = 'flex';
@@ -1090,30 +1095,20 @@ function closePwModal() {
   history.replaceState({}, '', location.pathname);
 }
 
-async function submitPw() {
+function submitPw() {
   const errEl = document.getElementById('pwError');
   const pw = document.getElementById('pwInput').value;
   if (!pw) return;
-  errEl.style.display = 'none';
-  errEl.textContent = '확인 중...';
-  errEl.style.color = 'var(--ink-3)';
-  errEl.style.display = 'block';
-  try {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
-    const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-    if (hash === ADMIN_HASH) {
-      document.getElementById('pwModal').style.display = 'none';
-      history.replaceState({}, '', location.pathname);
-      enterAdminMode();
-    } else {
-      errEl.textContent = '비밀번호가 틀렸습니다.';
-      errEl.style.color = 'var(--red)';
-      document.getElementById('pwInput').value = '';
-      document.getElementById('pwInput').focus();
-    }
-  } catch(e) {
-    errEl.textContent = '오류: ' + e.message;
+  if (hashPw(pw) === ADMIN_HASH) {
+    document.getElementById('pwModal').style.display = 'none';
+    history.replaceState({}, '', location.pathname);
+    enterAdminMode();
+  } else {
+    errEl.textContent = '비밀번호가 틀렸습니다.';
     errEl.style.color = 'var(--red)';
+    errEl.style.display = 'block';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
   }
 }
 
