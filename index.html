@@ -441,6 +441,97 @@ footer {
 footer span { color: var(--blue); }
 
 /* ══════════════════════════════════════
+   Admin Mode
+══════════════════════════════════════ */
+#adminBar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+  background: var(--blue); color: #fff;
+  display: none; align-items: center; gap: 12px;
+  padding: 10px 20px; font-family: var(--font);
+  box-shadow: 0 2px 12px rgba(59,125,248,0.4);
+}
+.admin-bar-title { font-size: 12px; font-weight: 700; letter-spacing: 1px; flex: 1; }
+.admin-bar-btn {
+  padding: 6px 16px; border: none; cursor: pointer; border-radius: var(--radius-pill);
+  font-family: var(--font); font-size: 12px; font-weight: 700; transition: all .2s;
+}
+.admin-save-btn { background: #fff; color: var(--blue); }
+.admin-save-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
+.admin-exit-btn { background: rgba(255,255,255,0.18); color: #fff; }
+.admin-exit-btn:hover { background: rgba(255,255,255,0.3); }
+
+body.admin-mode { padding-top: 44px; }
+body.admin-mode .editable {
+  outline: 2px dashed rgba(59,125,248,0.5);
+  border-radius: 4px; cursor: text; min-width: 20px; min-height: 1em;
+  transition: outline .15s;
+}
+body.admin-mode .editable:hover { outline-color: var(--blue); }
+body.admin-mode .editable:focus { outline: 2px solid var(--blue); background: var(--blue-dim); border-radius: 4px; }
+
+/* 프로젝트 카드 admin 컨트롤 */
+.pcard-admin { position: absolute; top: 12px; right: 12px; display: none; gap: 6px; z-index: 10; }
+body.admin-mode .pcard-admin { display: flex; }
+.pcard-admin-btn {
+  width: 28px; height: 28px; border: none; cursor: pointer; border-radius: var(--radius-pill);
+  font-size: 13px; display: flex; align-items: center; justify-content: center;
+  transition: all .2s; font-family: var(--font);
+}
+.pcard-edit-btn { background: var(--blue-dim); color: var(--blue); }
+.pcard-edit-btn:hover { background: var(--blue); color: #fff; }
+.pcard-del-btn  { background: var(--red-dim);  color: var(--red); }
+.pcard-del-btn:hover  { background: var(--red);  color: #fff; }
+
+/* 추가 버튼 */
+.admin-add-btn {
+  width: 100%; padding: 16px; border: 2px dashed var(--blue-dim); background: none;
+  cursor: pointer; border-radius: var(--radius-lg); color: var(--blue);
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  transition: all .2s; display: none; margin-top: 8px;
+}
+.admin-add-btn:hover { background: var(--blue-dim); border-color: var(--blue); }
+body.admin-mode .admin-add-btn { display: block; }
+
+/* career admin */
+.career-item-admin { position: absolute; right: 0; top: 0; display: none; gap: 4px; }
+body.admin-mode .career-item { position: relative; padding-right: 64px; }
+body.admin-mode .career-item-admin { display: flex; }
+.career-del-btn {
+  width: 22px; height: 22px; border: none; cursor: pointer; border-radius: 50%;
+  background: var(--red-dim); color: var(--red); font-size: 11px;
+  display: flex; align-items: center; justify-content: center; transition: all .2s;
+}
+.career-del-btn:hover { background: var(--red); color: #fff; }
+
+/* admin 편집 모달 */
+#adminModal {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(10,12,20,0.6); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; pointer-events: none; transition: opacity .25s var(--ease);
+}
+#adminModal.open { opacity: 1; pointer-events: all; }
+.admin-modal-card {
+  background: var(--surface); border-radius: var(--radius-xl);
+  padding: 36px 40px; max-width: 500px; width: 100%;
+  box-shadow: var(--sh-lg); position: relative;
+  transform: translateY(20px); transition: transform .3s var(--spring);
+}
+#adminModal.open .admin-modal-card { transform: none; }
+.admin-modal-title { font-size: 18px; font-weight: 800; margin-bottom: 24px; }
+.admin-field { margin-bottom: 16px; }
+.admin-label { font-size: 11px; font-weight: 700; color: var(--ink-3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.admin-input, .admin-textarea, .admin-select {
+  width: 100%; padding: 10px 14px; border-radius: var(--radius);
+  border: 1px solid var(--bg-deep); background: var(--bg);
+  font-family: var(--font); font-size: 13px; color: var(--ink);
+  transition: border .2s; outline: none;
+}
+.admin-input:focus, .admin-textarea:focus { border-color: var(--blue); background: var(--surface); }
+.admin-textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+.admin-modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+
+/* ══════════════════════════════════════
    Animations
 ══════════════════════════════════════ */
 @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:.35} }
@@ -511,6 +602,55 @@ footer span { color: var(--blue); }
 </style>
 </head>
 <body>
+
+<!-- Admin Bar -->
+<div id="adminBar">
+  <span class="admin-bar-title">✏️ 편집 모드</span>
+  <button class="admin-bar-btn admin-save-btn" onclick="adminSave()">저장</button>
+  <button class="admin-bar-btn admin-exit-btn" onclick="exitAdmin()">종료</button>
+</div>
+
+<!-- Admin 편집 모달 -->
+<div id="adminModal">
+  <div class="admin-modal-card">
+    <div class="admin-modal-title" id="adminModalTitle">프로젝트 편집</div>
+    <div class="admin-field">
+      <div class="admin-label">이모지</div>
+      <input class="admin-input" id="af-emoji" placeholder="📋">
+    </div>
+    <div class="admin-field">
+      <div class="admin-label">제목</div>
+      <input class="admin-input" id="af-title" placeholder="프로젝트 이름">
+    </div>
+    <div class="admin-field">
+      <div class="admin-label">상태</div>
+      <select class="admin-select admin-input" id="af-status">
+        <option value="live">운영 중 (live)</option>
+        <option value="wip">개발 중 (wip)</option>
+      </select>
+    </div>
+    <div class="admin-field">
+      <div class="admin-label">짧은 설명</div>
+      <textarea class="admin-textarea" id="af-desc" rows="2"></textarea>
+    </div>
+    <div class="admin-field">
+      <div class="admin-label">자세한 설명 (클릭 시 표시)</div>
+      <textarea class="admin-textarea" id="af-detail" rows="3"></textarea>
+    </div>
+    <div class="admin-field">
+      <div class="admin-label">태그 (쉼표로 구분)</div>
+      <input class="admin-input" id="af-tags" placeholder="GAS, Google Sheets">
+    </div>
+    <div class="admin-field">
+      <div class="admin-label">링크 (없으면 빈칸)</div>
+      <input class="admin-input" id="af-link" placeholder="https://...">
+    </div>
+    <div class="admin-modal-actions">
+      <button class="admin-bar-btn admin-exit-btn" style="background:var(--bg-deep);color:var(--ink-3)" onclick="closeAdminModal()">취소</button>
+      <button class="admin-bar-btn admin-save-btn" style="background:var(--blue);color:#fff" onclick="adminModalConfirm()">확인</button>
+    </div>
+  </div>
+</div>
 
 <!-- 모달 -->
 <div class="modal-backdrop" id="modal">
@@ -645,27 +785,31 @@ footer span { color: var(--blue); }
     <section id="career">
       <div class="section-label">Career</div>
       <h2 class="section-title">소개</h2>
-      <div class="career-list">
+      <div class="career-list" id="careerList">
         <div class="career-item reveal">
-          <div class="career-year">2026</div>
-          <div class="career-title">인공지능 활용 선도교사 연수 대상자</div>
+          <div class="career-year editable-career-year">2026</div>
+          <div class="career-title editable-career-title">인공지능 활용 선도교사 연수 대상자</div>
+          <div class="career-item-admin"><button class="career-del-btn" onclick="delCareer(this)">✕</button></div>
         </div>
         <div class="career-item reveal" style="transition-delay:.08s">
-          <div class="career-year">2026</div>
-          <div class="career-title">Google Certified Trainer 취득</div>
+          <div class="career-year editable-career-year">2026</div>
+          <div class="career-title editable-career-title">Google Certified Trainer 취득</div>
+          <div class="career-item-admin"><button class="career-del-btn" onclick="delCareer(this)">✕</button></div>
         </div>
         <div class="career-item reveal" style="transition-delay:.16s">
-          <div class="career-year">2023~</div>
-          <div class="career-title">고등학교 국어 교사</div>
+          <div class="career-year editable-career-year">2023~</div>
+          <div class="career-title editable-career-title">고등학교 국어 교사</div>
+          <div class="career-item-admin"><button class="career-del-btn" onclick="delCareer(this)">✕</button></div>
         </div>
       </div>
+      <button class="admin-add-btn" onclick="addCareer()">+ 약력 항목 추가</button>
     </section>
 
     <!-- Projects — Sheets CMS로 동적 로드 -->
     <section id="projects">
       <div class="section-label">Projects</div>
       <h2 class="section-title">직접 만든 도구들</h2>
-      <div class="proj-list" id="projList">
+      <div class="proj-list" id="projList" style="position:relative">
         <!-- 스켈레톤 -->
         <div class="skeleton-card">
           <div class="sk-box" style="width:52px;height:52px;"></div>
@@ -695,6 +839,7 @@ footer span { color: var(--blue); }
           </div>
         </div>
       </div>
+      <button class="admin-add-btn" id="projAddBtn" onclick="adminAddProject()">+ 프로젝트 추가</button>
     </section>
 
     <!-- Contact -->
@@ -882,6 +1027,180 @@ window.addEventListener('scroll', () => {
 /* ── 토글 ::after 다크모드 예외 처리 ── */
 // cdui-toggle의 ::after는 thumb이므로 숨기면 안 됨 → 별도 클래스로 보호
 document.querySelectorAll('.cdui-toggle').forEach(el => el.classList.add('toggle-protected'));
+
+/* ══════════════════════════════════════
+   Admin Mode
+══════════════════════════════════════ */
+const ADMIN_HASH = '82a59fcfdb866f7cbb7ffffd93c250a7f00a4f4a4283a3fe3bead9122ad81bff';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+(async () => {
+  if (!new URLSearchParams(location.search).has('edit')) return;
+  const pw = prompt('비밀번호를 입력하세요');
+  if (!pw) return;
+  if (await sha256(pw) === ADMIN_HASH) enterAdminMode();
+  else { alert('비밀번호가 틀렸습니다.'); history.replaceState({}, '', location.pathname); }
+})();
+
+let adminCurrentProjects = [];
+let adminEditingIdx = -1;
+
+function enterAdminMode() {
+  history.replaceState({}, '', location.pathname);
+  document.body.classList.add('admin-mode');
+  document.getElementById('adminBar').style.display = 'flex';
+
+  // 텍스트 요소 편집 가능하게
+  [
+    document.getElementById('heroDesc'),
+    document.querySelector('.hero-title em'),
+    document.querySelector('.hero-title .line-accent'),
+    document.getElementById('contactSub'),
+    document.querySelector('.sb-tagline'),
+    document.querySelector('#about .section-title'),
+    document.querySelector('#career .section-title'),
+    document.querySelector('#projects .section-title'),
+    document.querySelector('#contact .section-title'),
+    ...document.querySelectorAll('.acard h3'),
+    ...document.querySelectorAll('.acard p'),
+    ...document.querySelectorAll('.editable-career-year'),
+    ...document.querySelectorAll('.editable-career-title'),
+  ].forEach(el => { if (el) { el.contentEditable = 'true'; el.classList.add('editable'); }});
+}
+
+function exitAdmin() {
+  document.body.classList.remove('admin-mode');
+  document.getElementById('adminBar').style.display = 'none';
+  document.querySelectorAll('.editable').forEach(el => {
+    el.contentEditable = 'false'; el.classList.remove('editable');
+  });
+}
+
+/* ── 프로젝트 admin 렌더 ── */
+function renderProjects(projects) {
+  adminCurrentProjects = JSON.parse(JSON.stringify(projects));
+  const list = document.getElementById('projList');
+  list.innerHTML = '';
+  projects.forEach((p, i) => {
+    const card = document.createElement('button');
+    card.className = 'pcard reveal';
+    card.style.transitionDelay = (i * 0.08) + 's';
+    card.dataset.idx = i;
+    card.innerHTML = `
+      <div class="pcard-admin">
+        <button class="pcard-admin-btn pcard-edit-btn" onclick="adminEditProject(event,${i})">✏️</button>
+        <button class="pcard-admin-btn pcard-del-btn"  onclick="adminDelProject(event,${i})">✕</button>
+      </div>
+      <div class="pcard-emoji">${p.emoji}</div>
+      <div class="pcard-body">
+        <div class="pcard-meta"><span class="status ${p.status}">${p.statusLabel}</span></div>
+        <div class="pcard-title">${p.title}</div>
+        <div class="pcard-desc">${p.desc}</div>
+        <div class="pcard-tags">${p.tags.map(t=>`<span class="tag blue">${t}</span>`).join('')}</div>
+      </div>
+      <div class="pcard-arrow">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`;
+    card.addEventListener('click', e => { if (!e.target.closest('.pcard-admin')) openModal(p); });
+    list.appendChild(card);
+    requestAnimationFrame(() => io.observe(card));
+  });
+}
+
+/* ── 프로젝트 편집 모달 ── */
+function openAdminModal(title, p) {
+  document.getElementById('adminModalTitle').textContent = title;
+  document.getElementById('af-emoji').value  = p.emoji || '';
+  document.getElementById('af-title').value  = p.title || '';
+  document.getElementById('af-status').value = p.status || 'live';
+  document.getElementById('af-desc').value   = p.desc || '';
+  document.getElementById('af-detail').value = p.detail || '';
+  document.getElementById('af-tags').value   = Array.isArray(p.tags) ? p.tags.join(', ') : (p.tags||'');
+  document.getElementById('af-link').value   = p.link || '';
+  document.getElementById('adminModal').classList.add('open');
+}
+function closeAdminModal() {
+  document.getElementById('adminModal').classList.remove('open');
+  adminEditingIdx = -1;
+}
+document.getElementById('adminModal').addEventListener('click', e => { if (e.target===e.currentTarget) closeAdminModal(); });
+
+function adminModalConfirm() {
+  const statusVal = document.getElementById('af-status').value;
+  const p = {
+    emoji: document.getElementById('af-emoji').value || '📌',
+    title: document.getElementById('af-title').value,
+    status: statusVal,
+    statusLabel: statusVal === 'live' ? '운영 중' : '개발 중',
+    desc:   document.getElementById('af-desc').value,
+    detail: document.getElementById('af-detail').value,
+    tags:   document.getElementById('af-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    link:   document.getElementById('af-link').value,
+  };
+  if (adminEditingIdx >= 0) adminCurrentProjects[adminEditingIdx] = p;
+  else adminCurrentProjects.push(p);
+  renderProjects(adminCurrentProjects);
+  closeAdminModal();
+}
+
+function adminAddProject()        { adminEditingIdx = -1; openAdminModal('프로젝트 추가', {}); }
+function adminEditProject(e, i)   { e.stopPropagation(); adminEditingIdx = i; openAdminModal('프로젝트 편집', adminCurrentProjects[i]); }
+function adminDelProject(e, i)    { e.stopPropagation(); if (confirm('삭제할까요?')) { adminCurrentProjects.splice(i, 1); renderProjects(adminCurrentProjects); }}
+
+/* ── 약력 추가/삭제 ── */
+function addCareer() {
+  const year  = prompt('연도 (예: 2024~)') || '';
+  const title = prompt('내용') || '';
+  if (!title) return;
+  const list = document.getElementById('careerList');
+  const item = document.createElement('div');
+  item.className = 'career-item';
+  item.innerHTML = `
+    <div class="career-year editable-career-year editable" contenteditable="true">${year}</div>
+    <div class="career-title editable-career-title editable" contenteditable="true">${title}</div>
+    <div class="career-item-admin"><button class="career-del-btn" onclick="delCareer(this)">✕</button></div>`;
+  list.appendChild(item);
+}
+function delCareer(btn) {
+  if (confirm('삭제할까요?')) btn.closest('.career-item').remove();
+}
+
+/* ── 저장 ── */
+async function adminSave() {
+  const btn = document.querySelector('.admin-save-btn');
+  btn.textContent = '저장 중...'; btn.disabled = true;
+
+  // settings 수집
+  const contactBtn = document.getElementById('contactBtn');
+  const settings = {
+    hero_desc:     document.getElementById('heroDesc').innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, ''),
+    contact_sub:   document.getElementById('contactSub').textContent.trim(),
+    contact_email: contactBtn.href.replace('mailto:',''),
+  };
+
+  // career 수집
+  const careerItems = [...document.querySelectorAll('#careerList .career-item')].map(el => ({
+    year:  el.querySelector('.career-year')?.textContent.trim()  || '',
+    title: el.querySelector('.career-title')?.textContent.trim() || '',
+  }));
+  settings.career = JSON.stringify(careerItems);
+
+  const formData = new URLSearchParams();
+  formData.append('data', JSON.stringify({ settings, projects: adminCurrentProjects }));
+
+  try {
+    await fetch(GAS_URL, { method: 'POST', body: formData });
+    btn.textContent = '저장됨 ✓';
+    setTimeout(() => { btn.textContent = '저장'; btn.disabled = false; }, 2000);
+  } catch {
+    alert('저장 실패. 네트워크를 확인해 주세요.');
+    btn.textContent = '저장'; btn.disabled = false;
+  }
+}
 
 /* ── 초기 로드 ── */
 loadFromSheets();
