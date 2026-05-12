@@ -1236,22 +1236,19 @@ function saveCache(data) {
 }
 
 async function loadFromSheets() {
+  // 스켈레톤 항상 먼저 (캐시 있으면 동기적으로 즉시 덮어쓰므로 실제로 안 보임)
+  renderAboutSkeleton();
+  renderNotes([]);
+
   const cached = getCache();
 
-  if (cached) {
-    // 캐시 있으면 즉시 렌더 (깜빡임 없음)
-    if (cached.projects) renderProjects(cached.projects);
-    else renderProjects(FALLBACK_PROJECTS);
-    if (cached.settings) applySettings(cached.settings);
-    else { renderAboutCards(FALLBACK_ABOUT); renderNotes(FALLBACK_NOTES); }
-  } else {
-    // 첫 방문: 스켈레톤 표시
-    renderAboutSkeleton();
-    renderNotes(FALLBACK_NOTES);
-  }
+  // 캐시로 즉시 렌더 (스켈레톤을 동기적으로 덮어씀 → 브라우저 페인트 1회만 발생)
+  if (cached?.projects) renderProjects(cached.projects);
+  if (cached?.settings) applySettings(cached.settings);
 
   if (!GAS_URL) {
-    if (!cached) { renderAboutCards(FALLBACK_ABOUT); renderProjects(FALLBACK_PROJECTS); }
+    if (!document.querySelector('#aboutGrid .acard')) renderAboutCards(FALLBACK_ABOUT);
+    if (!cached?.projects) renderProjects(FALLBACK_PROJECTS);
     return;
   }
 
@@ -1261,19 +1258,17 @@ async function loadFromSheets() {
     const fresh = JSON.stringify({ projects: data.projects, settings: data.settings });
     const old   = JSON.stringify({ projects: cached?.projects, settings: cached?.settings });
 
-    saveCache({ projects: data.projects, settings: data.settings });
+    saveCache({ projects: data.projects || [], settings: data.settings || {} });
 
-    // 데이터가 바뀌었을 때만 다시 렌더
     if (fresh !== old) {
       if (data.projects) renderProjects(data.projects);
       if (data.settings) applySettings(data.settings);
     }
-  } catch {
-    if (!cached) {
-      renderAboutCards(FALLBACK_ABOUT);
-      renderProjects(FALLBACK_PROJECTS);
-    }
-  }
+  } catch { /* 무시 */ }
+
+  // 모든 경우에서 about 카드 미렌더 시 fallback 보장
+  if (!document.querySelector('#aboutGrid .acard')) renderAboutCards(FALLBACK_ABOUT);
+  if (!cached?.projects && !document.querySelector('.pcard')) renderProjects(FALLBACK_PROJECTS);
 }
 
 function applySettings(s) {
