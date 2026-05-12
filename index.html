@@ -1265,8 +1265,18 @@ async function loadFromSheets() {
 }
 
 function applySettings(s) {
-  if (s.hero_desc)    document.getElementById('heroDesc').innerHTML    = s.hero_desc.replace(/\n/g,'<br>');
-  if (s.contact_sub)  document.getElementById('contactSub').textContent = s.contact_sub;
+  const set = (sel, val) => { const el = document.querySelector(sel); if (el && val) el.textContent = val; };
+  if (s.hero_line1)     set('.hero-line-1', s.hero_line1);
+  if (s.hero_em)        set('.hero-title em', s.hero_em);
+  if (s.hero_accent)    set('.hero-title .line-accent', s.hero_accent);
+  if (s.hero_desc)      document.getElementById('heroDesc').innerHTML = s.hero_desc.replace(/\n/g,'<br>');
+  if (s.tagline)        set('.sb-tagline', s.tagline);
+  if (s.about_title)    set('#about .section-title', s.about_title);
+  if (s.career_title)   set('#career .section-title', s.career_title);
+  if (s.projects_title) set('#projects .section-title', s.projects_title);
+  if (s.notes_title)    set('#notes .section-title', s.notes_title);
+  if (s.contact_title)  set('#contact .section-title', s.contact_title);
+  if (s.contact_sub)    document.getElementById('contactSub').textContent = s.contact_sub;
   if (s.contact_email) {
     const btn = document.getElementById('contactBtn');
     btn.href = 'mailto:' + s.contact_email;
@@ -1275,15 +1285,9 @@ function applySettings(s) {
     if (svg) btn.appendChild(svg);
     btn.appendChild(document.createTextNode(' ' + s.contact_email));
   }
-  if (s.career) {
-    try { renderCareerItems(JSON.parse(s.career)); } catch {}
-  }
-  if (s.about) {
-    try { renderAboutCards(JSON.parse(s.about)); } catch {}
-  }
-  if (s.notes) {
-    try { renderNotes(JSON.parse(s.notes)); } catch {}
-  }
+  if (s.career) { try { renderCareerItems(JSON.parse(s.career)); } catch {} }
+  if (s.about)  { try { renderAboutCards(JSON.parse(s.about));   } catch {} }
+  if (s.notes)  { try { renderNotes(JSON.parse(s.notes));        } catch {} }
 }
 
 function renderCareerItems(items) {
@@ -1818,10 +1822,20 @@ async function adminSave() {
 
   // settings 수집
   const contactBtn = document.getElementById('contactBtn');
+  const txt = (sel) => document.querySelector(sel)?.textContent.trim() || '';
   const settings = {
-    hero_desc:     document.getElementById('heroDesc').innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, ''),
-    contact_sub:   document.getElementById('contactSub').textContent.trim(),
-    contact_email: contactBtn.href.replace('mailto:',''),
+    hero_line1:      txt('.hero-line-1'),
+    hero_em:         txt('.hero-title em'),
+    hero_accent:     txt('.hero-title .line-accent'),
+    hero_desc:       document.getElementById('heroDesc').innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, ''),
+    tagline:         txt('.sb-tagline'),
+    about_title:     txt('#about .section-title'),
+    career_title:    txt('#career .section-title'),
+    projects_title:  txt('#projects .section-title'),
+    notes_title:     txt('#notes .section-title'),
+    contact_title:   txt('#contact .section-title'),
+    contact_sub:     document.getElementById('contactSub').textContent.trim(),
+    contact_email:   contactBtn.href.replace('mailto:',''),
   };
 
   // career 수집
