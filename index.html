@@ -1135,38 +1135,38 @@ function renderAboutCards(cards) {
   });
 }
 
-// GAS 연동 전 fallback 데이터
+// 기본 프로젝트 데이터 (Sheets 미연동·빈 배열일 때 표시)
 const FALLBACK_PROJECTS = [
   {
     emoji: '📋', title: '자율학습 출석부',
     status: 'live', statusLabel: '운영 중',
     desc: '청백운반 5개 자습반 출석을 실시간 관리. 저장 잠금·세션 관리·결석 현황 리포트·방과후 토글 기능 포함.',
-    detail: 'Google Apps Script와 Google Sheets를 백엔드로, CDUI 기반의 단일 HTML 파일로 구현된 출석 관리 웹앱입니다. 저장 후 자동 잠금 시스템, 세션별 출석 관리, 결석 현황 리포트 자동 생성 기능을 포함합니다.',
-    tags: ['GAS', 'Google Sheets', 'CDUI'],
+    detail: 'Google Apps Script와 Google Sheets를 백엔드로, 단일 HTML 파일로 구현한 출석 관리 웹앱. 저장 후 자동 잠금, 세션별 출석 기록, 결석 현황 리포트 자동 생성, 방과후 수업 토글을 지원합니다.',
+    tags: ['GAS', 'Google Sheets', 'HTML'],
     link: ''
   },
   {
     emoji: '📊', title: '성적 분석 · 상담 도구',
     status: 'wip', statusLabel: '개발 중',
     desc: 'NEIS 성적 데이터를 불러와 학생별 성취 추이를 시각화하고 상담 자료를 자동으로 생성합니다.',
-    detail: 'NEIS에서 내보낸 CSV 파일을 GAS로 파싱하여 Chart.js로 성적 추이를 시각화합니다. 학생별 상담 자료를 자동 생성하고, AI 슬라이드 생성 기능도 개발 중입니다.',
+    detail: 'NEIS에서 내보낸 CSV를 GAS로 파싱해 Chart.js로 성적 추이를 시각화합니다. 학생별 맞춤 상담 자료를 자동 생성하며, AI 기반 슬라이드 생성 기능도 개발 중입니다.',
     tags: ['GAS', 'Chart.js', 'NEIS'],
     link: ''
   },
   {
     emoji: '🎓', title: '온라인 강좌 수강 신청',
     status: 'live', statusLabel: '운영 중',
-    desc: '학생 수강 신청과 교사 승인 워크플로우를 자동화한 웹앱.',
-    detail: '학생이 온라인 강좌를 신청하고, 담당 교사가 승인·반려하는 전체 워크플로우를 자동화합니다. 신청 현황을 Google Sheets에서 실시간으로 관리합니다.',
-    tags: ['GAS', 'Google Sheets', 'CDUI'],
+    desc: '학생 수강 신청·교사 승인·반려 워크플로우 전체를 자동화한 웹앱. 신청 현황을 실시간으로 확인합니다.',
+    detail: '학생이 온라인 강좌를 신청하면 담당 교사에게 알림이 전송되고, 승인·반려 처리가 Google Sheets에 실시간 반영됩니다. 신청 마감·정원 초과 처리도 자동화되어 있습니다.',
+    tags: ['GAS', 'Google Sheets', 'HTML'],
     link: ''
   },
   {
     emoji: '🎲', title: '발표자 룰렛',
     status: 'live', statusLabel: '운영 중',
     desc: '스프링-댐퍼 물리 시뮬레이션 기반 발표자 추첨 앱. 자연스러운 감속과 바운스 효과가 특징.',
-    detail: '스프링-댐퍼 물리 엔진을 직접 구현하여 자연스러운 포인터 감속과 바운스를 구현했습니다. 수업 시간 발표자 무작위 선택에 활용합니다.',
-    tags: ['HTML', 'Physics', 'Canvas'],
+    detail: '스프링-댐퍼 물리 엔진을 직접 구현해 룰렛 포인터의 자연스러운 감속과 바운스를 재현했습니다. 수업 중 발표자 무작위 선택에 활용하며, 학생 이름 목록을 직접 입력할 수 있습니다.',
+    tags: ['HTML', 'JavaScript', 'Canvas'],
     link: ''
   }
 ];
@@ -1236,7 +1236,7 @@ async function loadFromSheets() {
   const cached = getCache();
 
   // 캐시로 즉시 렌더 (스켈레톤을 동기적으로 덮어씀 → 브라우저 페인트 1회만 발생)
-  if (cached?.projects) renderProjects(cached.projects);
+  if (cached?.projects?.length) renderProjects(cached.projects);
   if (cached?.settings) applySettings(cached.settings);
 
   if (!GAS_URL) {
@@ -1254,7 +1254,7 @@ async function loadFromSheets() {
     saveCache({ projects: data.projects || [], settings: data.settings || {} });
 
     if (fresh !== old) {
-      if (data.projects) renderProjects(data.projects);
+      if (data.projects?.length) renderProjects(data.projects);
       if (data.settings) applySettings(data.settings);
     }
   } catch { /* 무시 */ }
