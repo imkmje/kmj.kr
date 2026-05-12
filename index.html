@@ -625,6 +625,31 @@ body.admin-mode .career-item-admin { display: flex; }
 </head>
 <body>
 
+<!-- 비밀번호 모달 -->
+<div id="pwModal" style="display:none;position:fixed;inset:0;z-index:6000;background:rgba(10,12,20,0.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--surface);border-radius:var(--radius-xl);padding:32px 36px;max-width:360px;width:100%;box-shadow:var(--sh-lg);">
+    <div style="font-size:15px;font-weight:800;margin-bottom:16px;">편집 모드 접속</div>
+    <input id="pwInput" type="password" placeholder="비밀번호" style="width:100%;padding:12px 14px;border:1.5px solid var(--bg-deep);border-radius:var(--radius);font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg);outline:none;margin-bottom:16px;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--bg-deep)'">
+    <div id="pwError" style="display:none;font-size:12px;color:var(--red);margin-bottom:10px;">비밀번호가 틀렸습니다.</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closePwModal()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--bg-deep);color:var(--ink-3);font-family:var(--font);font-size:13px;font-weight:600;">취소</button>
+      <button onclick="submitPw()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;">접속</button>
+    </div>
+  </div>
+</div>
+
+<!-- 텍스트 편집 모달 -->
+<div id="textEditModal" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(10,12,20,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--surface);border-radius:var(--radius-xl);padding:32px 36px;max-width:460px;width:100%;box-shadow:var(--sh-lg);position:relative;">
+    <div id="textEditLabel" style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;"></div>
+    <textarea id="textEditInput" rows="3" style="width:100%;padding:12px 14px;border:1.5px solid var(--bg-deep);border-radius:var(--radius);font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg);outline:none;resize:vertical;min-height:72px;line-height:1.6;transition:border .2s;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--bg-deep)'"></textarea>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+      <button onclick="closeTextEdit()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--bg-deep);color:var(--ink-3);font-family:var(--font);font-size:13px;font-weight:600;">취소</button>
+      <button onclick="confirmTextEdit()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;">저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- Admin Bar -->
 <div id="adminBar">
   <span class="admin-bar-title">✏️ 편집 모드 — 파란 테두리 영역을 클릭해서 수정하세요</span>
@@ -1060,13 +1085,33 @@ async function sha256(str) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-(async () => {
-  if (!new URLSearchParams(location.search).has('edit')) return;
-  const pw = prompt('비밀번호를 입력하세요');
-  if (!pw) return;
-  if (await sha256(pw) === ADMIN_HASH) enterAdminMode();
-  else { alert('비밀번호가 틀렸습니다.'); history.replaceState({}, '', location.pathname); }
-})();
+if (new URLSearchParams(location.search).has('edit')) {
+  const m = document.getElementById('pwModal');
+  m.style.display = 'flex';
+  setTimeout(() => document.getElementById('pwInput').focus(), 100);
+}
+
+function closePwModal() {
+  document.getElementById('pwModal').style.display = 'none';
+  history.replaceState({}, '', location.pathname);
+}
+
+async function submitPw() {
+  const pw = document.getElementById('pwInput').value;
+  if (await sha256(pw) === ADMIN_HASH) {
+    document.getElementById('pwModal').style.display = 'none';
+    history.replaceState({}, '', location.pathname);
+    enterAdminMode();
+  } else {
+    document.getElementById('pwError').style.display = 'block';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+  }
+}
+
+document.getElementById('pwInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitPw();
+});
 
 let adminCurrentProjects = [];
 let adminEditingIdx = -1;
@@ -1090,6 +1135,8 @@ function enterAdminMode() {
     .forEach(el => registerEditable(el));
 }
 
+let _textEditTarget = null;
+
 function registerEditable(el) {
   el.style.outline      = '2px solid #3b7df8';
   el.style.borderRadius = '6px';
@@ -1097,14 +1144,35 @@ function registerEditable(el) {
   el.style.padding      = '2px 4px';
   el._adminHandler = function(e) {
     e.stopPropagation();
-    const cur = el.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g,'').trim();
-    const val = prompt('수정 후 확인:', cur);
-    if (val === null) return;
-    if (el.id === 'heroDesc') el.innerHTML = val.replace(/\n/g, '<br>');
-    else el.textContent = val;
+    _textEditTarget = el;
+    document.getElementById('textEditLabel').textContent = el.id || el.className.split(' ')[0] || '텍스트 수정';
+    const input = document.getElementById('textEditInput');
+    input.value = el.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g,'').trim();
+    const modal = document.getElementById('textEditModal');
+    modal.style.display = 'flex';
+    setTimeout(() => input.focus(), 50);
   };
   el.addEventListener('click', el._adminHandler);
 }
+
+function closeTextEdit() {
+  document.getElementById('textEditModal').style.display = 'none';
+  _textEditTarget = null;
+}
+
+function confirmTextEdit() {
+  if (!_textEditTarget) return;
+  const val = document.getElementById('textEditInput').value.trim();
+  if (_textEditTarget.id === 'heroDesc') _textEditTarget.innerHTML = val.replace(/\n/g,'<br>');
+  else _textEditTarget.textContent = val;
+  closeTextEdit();
+}
+
+// Ctrl+Enter로 저장
+document.getElementById('textEditInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); confirmTextEdit(); }
+  if (e.key === 'Escape') closeTextEdit();
+});
 
 function exitAdmin() {
   document.body.classList.remove('admin-mode');
