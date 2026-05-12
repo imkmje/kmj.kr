@@ -1076,85 +1076,43 @@ function enterAdminMode() {
   document.body.classList.add('admin-mode');
   document.getElementById('adminBar').style.display = 'flex';
 
-  const configs = [
-    { sel: '.hero-line-1',               multi: false },
-    { sel: '.hero-title em',             multi: false },
-    { sel: '.hero-title .line-accent',   multi: false },
-    { sel: '#heroDesc',                  multi: true  },
-    { sel: '#contactSub',                multi: true  },
-    { sel: '.sb-tagline',                multi: false },
-    { sel: '#about .section-title',      multi: false },
-    { sel: '#career .section-title',     multi: false },
-    { sel: '#projects .section-title',   multi: false },
-    { sel: '#contact .section-title',    multi: false },
+  const sels = [
+    '.hero-line-1', '.hero-title em', '.hero-title .line-accent',
+    '#heroDesc', '#contactSub', '.sb-tagline',
+    '#about .section-title', '#career .section-title',
+    '#projects .section-title', '#contact .section-title',
   ];
-  configs.forEach(({ sel, multi }) => {
+  sels.forEach(sel => {
     const el = document.querySelector(sel);
-    if (el) attachEditOverlay(el, multi);
+    if (el) registerEditable(el);
   });
-  document.querySelectorAll('.acard h3, .acard p').forEach(el => attachEditOverlay(el, el.tagName==='P'));
-  document.querySelectorAll('.editable-career-year, .editable-career-title').forEach(el => attachEditOverlay(el, false));
+  document.querySelectorAll('.acard h3, .acard p, .editable-career-year, .editable-career-title')
+    .forEach(el => registerEditable(el));
 }
 
-function attachEditOverlay(el, multiline) {
-  el.classList.add('editable');
-  el.addEventListener('click', function(e) {
-    if (!document.body.classList.contains('admin-mode')) return;
+function registerEditable(el) {
+  el.style.outline      = '2px solid #3b7df8';
+  el.style.borderRadius = '6px';
+  el.style.cursor       = 'pointer';
+  el.style.padding      = '2px 4px';
+  el._adminHandler = function(e) {
     e.stopPropagation();
-    openEditOverlay(el, multiline);
-  });
-}
-
-function openEditOverlay(el, multiline) {
-  document.querySelectorAll('.admin-edit-overlay').forEach(o => o.remove());
-
-  const rect = el.getBoundingClientRect();
-  const overlay = document.createElement('div');
-  overlay.className = 'admin-edit-overlay';
-  overlay.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
-  overlay.style.left = Math.max(rect.left + window.scrollX, 10) + 'px';
-
-  const field = multiline ? document.createElement('textarea') : document.createElement('input');
-  field.value = el.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
-  if (multiline) field.rows = 3;
-
-  const hint = document.createElement('div');
-  hint.className = 'admin-edit-hint';
-  hint.textContent = multiline ? 'Ctrl+Enter 저장  ·  Esc 취소' : 'Enter 저장  ·  Esc 취소';
-
-  overlay.append(field, hint);
-  document.body.appendChild(overlay);
-  field.focus();
-
-  function save() {
-    const v = field.value.trim();
-    if (el.id === 'heroDesc') el.innerHTML = v.replace(/\n/g, '<br>');
-    else el.textContent = v;
-    overlay.remove();
-  }
-
-  field.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { overlay.remove(); return; }
-    if (e.key === 'Enter' && !multiline) { e.preventDefault(); save(); }
-    if (e.key === 'Enter' &&  multiline && (e.ctrlKey || e.metaKey)) { e.preventDefault(); save(); }
-  });
-
-  setTimeout(() => {
-    function outside(e) {
-      if (!overlay.contains(e.target) && e.target !== el) {
-        save();
-        document.removeEventListener('click', outside);
-      }
-    }
-    document.addEventListener('click', outside);
-  }, 100);
+    const cur = el.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g,'').trim();
+    const val = prompt('수정 후 확인:', cur);
+    if (val === null) return;
+    if (el.id === 'heroDesc') el.innerHTML = val.replace(/\n/g, '<br>');
+    else el.textContent = val;
+  };
+  el.addEventListener('click', el._adminHandler);
 }
 
 function exitAdmin() {
-  document.querySelectorAll('.admin-edit-overlay').forEach(o => o.remove());
   document.body.classList.remove('admin-mode');
   document.getElementById('adminBar').style.display = 'none';
-  document.querySelectorAll('.editable').forEach(el => el.classList.remove('editable'));
+  document.querySelectorAll('[style*="outline"]').forEach(el => {
+    el.style.outline = ''; el.style.borderRadius = ''; el.style.cursor = ''; el.style.padding = '';
+    if (el._adminHandler) { el.removeEventListener('click', el._adminHandler); delete el._adminHandler; }
+  });
 }
 
 /* ── 프로젝트 admin 렌더 ── */
