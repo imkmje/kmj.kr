@@ -73,9 +73,7 @@ html[data-theme="dark"] {
 html[data-theme="dark"] .sidebar::after,
 html[data-theme="dark"] .acard::after,
 html[data-theme="dark"] .pcard::after,
-html[data-theme="dark"] .cdui-wrap::after,
 html[data-theme="dark"] .contact-card::after,
-html[data-theme="dark"] .mini-card::after,
 html[data-theme="dark"] .modal-card::after { opacity: 0; }
 
 html[data-theme="dark"] .sidebar {
@@ -400,86 +398,6 @@ html[data-theme="dark"] .skeleton-card::after {
   box-shadow: var(--sh-pressed); pointer-events: none;
 }
 
-/* ── CDUI Showcase ── */
-.cdui-wrap {
-  background: var(--surface); box-shadow: var(--sh-md);
-  border-radius: var(--radius-xl); padding: 40px;
-  position: relative; overflow: hidden;
-}
-.cdui-wrap::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(155deg, rgba(255,255,255,.50) 0%, transparent 42%);
-}
-.cdui-subtitle { font-size: 13px; color: var(--ink-3); margin-bottom: 28px; line-height: 1.8; }
-.palette { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
-.swatch {
-  width: 44px; height: 44px; border-radius: var(--radius-sm); box-shadow: var(--sh-sm);
-  transition: transform .2s var(--spring); cursor: default; position: relative;
-}
-.swatch:hover { transform: scale(1.12) translateY(-3px); }
-.swatch[title]:hover::after {
-  content: attr(title); position: absolute; bottom: -22px; left: 50%;
-  transform: translateX(-50%); font-size: 9px; font-weight: 600;
-  color: var(--ink-3); white-space: nowrap; font-family: monospace;
-}
-.cdui-sub-label {
-  font-size: 10px; font-weight: 700; color: var(--ink-4);
-  letter-spacing: 1.5px; text-transform: uppercase;
-  margin-bottom: 12px; margin-top: 24px;
-}
-/* 인터랙티브 버튼 데모 */
-.demo-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-.demo-btn {
-  padding: 9px 20px; border: none; cursor: pointer;
-  border-radius: var(--radius-pill);
-  font-family: var(--font); font-size: 12px; font-weight: 700;
-  transition: all .2s var(--spring); position: relative;
-}
-.demo-btn:active { transform: scale(0.95); }
-.demo-btn.b { background: var(--blue); color: #fff; box-shadow: var(--sh-blue); }
-.demo-btn.b:hover { transform: translateY(-2px); }
-.demo-btn.g { background: var(--green); color: #fff; box-shadow: var(--sh-green); }
-.demo-btn.g:hover { transform: translateY(-2px); }
-.demo-btn.r { background: var(--red); color: #fff; box-shadow: var(--sh-red); }
-.demo-btn.r:hover { transform: translateY(-2px); }
-.demo-btn.ghost { background: var(--bg-deep); color: var(--ink-2); box-shadow: var(--sh-pressed); }
-.demo-btn.ghost:hover { transform: translateY(-1px); color: var(--ink); }
-
-/* 토글 데모 */
-.toggle-demo-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
-.cdui-toggle {
-  position: relative; width: 44px; height: 26px;
-  background: var(--bg-deep); box-shadow: var(--sh-pressed);
-  border-radius: var(--radius-pill); border: none; cursor: pointer;
-  transition: background .25s, box-shadow .25s;
-}
-.cdui-toggle::after {
-  content: ''; position: absolute;
-  top: 4px; left: 4px; width: 18px; height: 18px;
-  background: var(--ink-4); border-radius: 50%;
-  transition: transform .25s var(--spring), background .25s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  opacity: 1; /* 다크모드 ::after 숨김 규칙 예외 */
-}
-.cdui-toggle.on { background: var(--blue); box-shadow: var(--sh-blue); }
-.cdui-toggle.on::after { transform: translateX(18px); background: #fff; }
-.toggle-label { font-size: 12px; color: var(--ink-3); font-weight: 500; }
-
-/* 카드 시스템 데모 */
-.mini-cards { display: flex; gap: 10px; flex-wrap: wrap; }
-.mini-card {
-  background: var(--surface-hi); box-shadow: var(--sh-md);
-  border-radius: var(--radius); padding: 14px 18px; flex: 1; min-width: 110px;
-  position: relative; overflow: hidden; transition: transform .2s var(--spring);
-}
-.mini-card:hover { transform: translateY(-3px); }
-.mini-card::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(155deg, rgba(255,255,255,.50) 0%, transparent 42%);
-}
-.mini-label { font-size: 10px; font-weight: 700; color: var(--ink-4); letter-spacing: 0.5px; margin-bottom: 4px; }
-.mini-val   { font-size: 16px; font-weight: 700; font-family: monospace; }
-
 /* ── Contact ── */
 .contact-card {
   background: var(--surface); box-shadow: var(--sh-lg);
@@ -613,7 +531,7 @@ footer span { color: var(--blue); }
 <nav class="mobile-nav" id="mobileNav">
   <span class="sb-logo">KMJ</span>
   <a href="#hero"     class="mobile-link">홈</a>
-  <a href="#about"    class="mobile-link">소개</a>
+  <a href="#about"    class="mobile-link">프로필</a>
   <a href="#career"   class="mobile-link">소개</a>
   <a href="#projects" class="mobile-link">프로젝트</a>
   <a href="#contact"  class="mobile-link">연락</a>
@@ -639,7 +557,7 @@ footer span { color: var(--blue); }
         <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈
       </a>
       <a href="#about"    class="sb-link" data-section="about">
-        <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>소개
+        <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>프로필
       </a>
       <a href="#career" class="sb-link" data-section="career">
         <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>소개
@@ -889,7 +807,10 @@ function applySettings(s) {
   if (s.contact_email) {
     const btn = document.getElementById('contactBtn');
     btn.href = 'mailto:' + s.contact_email;
-    btn.lastChild.textContent = s.contact_email;
+    const svg = btn.querySelector('svg');
+    btn.innerHTML = '';
+    if (svg) btn.appendChild(svg);
+    btn.appendChild(document.createTextNode(' ' + s.contact_email));
   }
 }
 
@@ -952,7 +873,7 @@ window.addEventListener('scroll', () => {
   let cur = 'hero';
   sectionIds.forEach(id => {
     const el = document.getElementById(id);
-    if (el && window.scrollY >= el.offsetTop - 180) cur = id;
+    if (el && el.getBoundingClientRect().top <= 180) cur = id;
   });
   sbLinks.forEach(l => l.classList.toggle('active', l.dataset.section === cur));
   mbLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + cur));
