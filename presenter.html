@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>발표자 선정 시스템 v132</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --bg: #f2f4f7;
+            --bg-deep: #e5e9f0;
+            --surface: #fcfdfe;
+            --surface-hi: #ffffff;
+            --ink: #1a1d23;
+            --ink-2: #4a5568;
+            --ink-3: #8a96a3;
+            --ink-4: #cbd5e0;
+            --blue: #4e89ff;
+            --red: #ff5a5a;
+            --green: #1faa6e;
+            --green-dim: rgba(31,170,110,0.13);
+
+            --sh-xs: 0 1px 2px rgba(0,0,0,0.07);
+            --sh-md: 0 12px 32px rgba(0,0,0,0.06), 0 0 0 1px rgba(255,255,255,0.9) inset;
+            --sh-pressed: 0 2px 4px rgba(0,0,0,0.05) inset, 0 4px 10px rgba(0,0,0,0.08) inset;
+            --sh-blue: 0 10px 25px rgba(78,137,255,0.3);
+            --sh-green: 0 4px 16px rgba(31,170,110,0.34), 0 1px 0 rgba(255,255,255,0.2) inset;
+
+            --radius-lg: 32px;
+            --radius-md: 20px;
+            --radius-pill: 999px;
+            --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        html[data-theme="dark"] {
+            --bg: #121418; --bg-deep: #0a0b0e; --surface: #1c1f26; --surface-hi: #252a34;
+            --ink: #f0f2f5; --ink-2: #a0aec0; --ink-3: #6b7280; --ink-4: #374151;
+            --sh-md: 0 10px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset;
+            --sh-pressed: 0 2px 4px rgba(0,0,0,0.3) inset, 0 4px 10px rgba(0,0,0,0.4) inset;
+        }
+
+        body { background: var(--bg); color: var(--ink); font-family: 'Noto Sans KR', sans-serif; margin: 0; height: 100vh; overflow: hidden; touch-action: none; }
+        .app-shell { width: 100%; height: 100vh; padding: 24px 32px; display: flex; flex-direction: column; box-sizing: border-box; }
+
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-shrink: 0; }
+        .brand { font-weight: 800; font-size: 1.6rem; letter-spacing: -1px; color: var(--blue); }
+
+        .layout-grid { display: grid; grid-template-columns: 1fr 420px; gap: 40px; flex: 1; min-height: 0; }
+
+        @media (max-width: 900px) {
+            .layout-grid { grid-template-columns: 1fr; overflow-y: auto; height: auto; }
+            body { overflow-y: auto; touch-action: pan-y; }
+            .app-shell { height: auto; padding: 20px; }
+            .wheel-section { height: auto; margin: 40px 0; }
+            .list-area { height: auto !important; }
+        }
+
+        /* ── Roulette ── */
+        .wheel-section { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; height: 100%; min-width: 0; }
+        .wheel-container {
+            position: relative; width: min(540px, 95%); aspect-ratio: 1/1;
+            background: var(--surface); border-radius: 50%;
+            padding: 14px; user-select: none; cursor: grab; flex-shrink: 0;
+            box-shadow: var(--sh-md);
+            transition: box-shadow 0.1s linear, transform 0.35s var(--spring);
+        }
+        .wheel-container:active { cursor: grabbing; }
+
+        /* [개선2] 정지 순간 펄스 클래스 */
+        .wheel-container.stop-pulse {
+            animation: stopPulse 0.35s var(--spring) forwards;
+        }
+        @keyframes stopPulse {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(1.018); }
+            100% { transform: scale(1); }
+        }
+
+        #wheel-canvas { width: 100%; height: 100%; border-radius: 50%; display: block; }
+
+        .wheel-pointer {
+            position: absolute; top: -16px; left: 50%; transform: translateX(-50%) rotate(0deg);
+            width: 50px; height: 62px; z-index: 30;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+            transform-origin: top center;
+        }
+        .wheel-pointer svg { fill: var(--red); }
+
+        /* ── Student Area ── */
+        .list-area { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+        .list-section { flex: 1; overflow-y: auto; padding: 4px; padding-right: 12px; scrollbar-width: thin; scrollbar-color: var(--ink-4) transparent; min-height: 0; }
+        .student-grid { display: grid; grid-template-columns: 1fr; gap: 14px; padding-bottom: 30px; }
+
+        /* [개선4] 카드 등장 스태거 애니메이션 */
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .student-card {
+            background: var(--surface); box-shadow: var(--sh-md);
+            border-radius: var(--radius-md); padding: 18px;
+            display: flex; flex-direction: column; gap: 12px;
+            transition: opacity 0.3s var(--ease), transform 0.3s var(--ease),
+                        filter 0.3s var(--ease), box-shadow 0.2s var(--ease);
+            border: 1px solid transparent;
+            opacity: 0; /* 초기값: 애니메이션으로 등장 */
+            animation: cardIn 0.4s var(--ease) forwards;
+        }
+        .student-card.excluded { opacity: 0.28 !important; filter: grayscale(1); transform: scale(0.97); }
+
+        /* [개선3] 버튼 hover/active 일관화 */
+        .card-top { display: flex; justify-content: space-between; align-items: center; }
+        .student-name { font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--ink); }
+        .exclude-toggle {
+            width: 24px; height: 24px; border-radius: 7px; border: 2px solid var(--ink-4);
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s var(--spring);
+            font-size: 0.8rem; flex-shrink: 0;
+        }
+        .exclude-toggle:hover { transform: scale(1.15); }
+        .exclude-toggle.active { background: var(--blue); border-color: var(--blue); color: white; }
+
+        .weight-stepper { display: flex; align-items: center; background: var(--bg-deep); padding: 4px; border-radius: var(--radius-pill); box-shadow: var(--sh-pressed); gap: 8px; }
+        .step-btn {
+            border: none; background: var(--surface-hi); width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800;
+            color: var(--ink-2); box-shadow: var(--sh-xs); cursor: pointer;
+            transition: transform 0.15s var(--spring), box-shadow 0.15s;
+        }
+        .step-btn:hover  { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.12); }
+        .step-btn:active { transform: scale(0.88); box-shadow: var(--sh-pressed); }
+
+        .weight-val { min-width: 30px; text-align: center; font-weight: 800; color: var(--blue); font-size: 0.95rem; }
+
+        .preset-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+        .preset-btn {
+            border: none; background: var(--bg-deep); color: var(--ink-2);
+            font-size: 0.8rem; font-weight: 700; padding: 6px 12px; border-radius: 12px; cursor: pointer;
+            transition: transform 0.15s var(--spring), background 0.15s, color 0.15s, box-shadow 0.15s;
+        }
+        .preset-btn:hover  { transform: translateY(-1px); background: var(--surface-hi); }
+        .preset-btn:active { transform: scale(0.93); }
+        .preset-btn.active { background: var(--blue); color: white; box-shadow: var(--sh-blue); }
+
+        /* [개선3] btn-spin hover 강화 */
+        .btn-spin {
+            background: var(--blue); color: white; border: none; padding: 20px;
+            border-radius: var(--radius-pill); font-weight: 800; font-size: 1.5rem;
+            box-shadow: var(--sh-blue); width: 100%; max-width: 360px; cursor: pointer;
+            margin-top: 16px; flex-shrink: 0;
+            transition: transform 0.25s var(--spring), box-shadow 0.25s var(--ease);
+        }
+        .btn-spin:hover  { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(78,137,255,0.45); }
+        .btn-spin:active { transform: scale(0.96); box-shadow: 0 4px 12px rgba(78,137,255,0.3); }
+
+        .history-tag {
+            background: var(--surface-hi); box-shadow: var(--sh-xs); padding: 6px 16px;
+            border-radius: var(--radius-pill); font-size: 0.85rem; font-weight: 700;
+            color: var(--ink-2); border: 1px solid var(--bg-deep);
+            animation: tagPop 0.4s var(--spring);
+        }
+        @keyframes tagPop {
+            from { opacity: 0; transform: scale(0.7); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .confetti-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1000; }
+
+        .theme-btn {
+            border: none; background: var(--surface); box-shadow: var(--sh-md);
+            width: 52px; height: 52px; border-radius: 16px; cursor: pointer; font-size: 1.3rem;
+            transition: transform 0.2s var(--spring);
+        }
+        .theme-btn:hover  { transform: translateY(-2px); }
+        .theme-btn:active { transform: scale(0.9); }
+
+        /* ── 반 선택 탭 ── */
+        .class-selector { background: var(--bg-deep); border-radius: var(--radius-pill); padding: 6px; box-shadow: var(--sh-pressed); }
+        .class-btn {
+            flex: 1; border: none; background: transparent; padding: 10px 6px;
+            border-radius: var(--radius-pill); font-weight: 700; color: var(--ink-3);
+            cursor: pointer; font-size: 0.9rem; white-space: nowrap;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s var(--spring);
+        }
+        .class-btn:hover:not(.active) { color: var(--ink-2); transform: translateY(-1px); }
+        .class-btn:active { transform: scale(0.94); }
+        .class-btn.active { background: var(--surface-hi); box-shadow: 0 4px 12px rgba(0,0,0,0.08); color: var(--blue); }
+
+        /* ── 커스텀 입력 ── */
+        .custom-input-area {
+            background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--sh-md);
+            padding: 20px; margin-bottom: 14px; flex-shrink: 0;
+            position: relative; overflow: hidden;
+        }
+        .custom-input-area::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(160deg, rgba(255,255,255,0.45) 0%, transparent 45%);
+            pointer-events: none;
+        }
+        .custom-input-label {
+            font-size: 0.78rem; font-weight: 800; color: var(--ink-3);
+            letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .custom-input-label span.count-badge {
+            background: var(--blue); color: white; font-size: 0.7rem; font-weight: 800;
+            padding: 2px 8px; border-radius: var(--radius-pill); letter-spacing: 0;
+            transition: background 0.3s, transform 0.2s var(--spring);
+        }
+        .custom-textarea {
+            width: 100%; min-height: 110px; max-height: 180px;
+            background: var(--bg-deep); box-shadow: var(--sh-pressed); border: none;
+            border-radius: 14px; padding: 14px 16px;
+            font-family: 'Noto Sans KR', sans-serif; font-size: 0.95rem; font-weight: 500;
+            color: var(--ink); resize: vertical; outline: none;
+            transition: box-shadow 0.2s; box-sizing: border-box; line-height: 1.7;
+        }
+        .custom-textarea::placeholder { color: var(--ink-4); }
+        .custom-textarea:focus { box-shadow: var(--sh-pressed), 0 0 0 2px rgba(78,137,255,0.25); }
+        .custom-hint { font-size: 0.75rem; color: var(--ink-4); margin-top: 8px; line-height: 1.5; }
+        .custom-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .btn-apply {
+            flex: 1; border: none; background: var(--green); color: white; padding: 12px;
+            border-radius: var(--radius-pill); font-weight: 800; font-size: 0.9rem; cursor: pointer;
+            box-shadow: var(--sh-green);
+            transition: transform 0.2s var(--spring), box-shadow 0.2s;
+        }
+        .btn-apply:hover  { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(31,170,110,0.4); }
+        .btn-apply:active { transform: scale(0.96); }
+        .btn-clear-input {
+            border: none; background: var(--bg-deep); color: var(--ink-3); padding: 12px 18px;
+            border-radius: var(--radius-pill); font-weight: 700; font-size: 0.85rem; cursor: pointer;
+            box-shadow: var(--sh-pressed); transition: color 0.2s, transform 0.15s var(--spring);
+        }
+        .btn-clear-input:hover  { color: var(--red); transform: translateY(-1px); }
+        .btn-clear-input:active { transform: scale(0.94); }
+
+        /* ── 빈 상태 ── */
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 10px; color: var(--ink-4); }
+        .empty-state .emoji { font-size: 2.5rem; }
+        .empty-state p { font-weight: 700; font-size: 0.9rem; text-align: center; line-height: 1.6; }
+
+        /* ── [개선5] winner 오버레이: 열기/닫기 분리 ── */
+        .winner-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+            display: flex; align-items: center; justify-content: center; z-index: 2000;
+            backdrop-filter: blur(8px); padding: 20px;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s var(--ease);
+        }
+        .winner-overlay.active { opacity: 1; pointer-events: all; }
+        .winner-card {
+            background: var(--surface); padding: 48px; border-radius: var(--radius-lg);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.9) inset;
+            text-align: center; max-width: 400px; width: 100%;
+            transform: scale(0.3) translateY(200px); opacity: 0;
+            transition: transform 0.6s var(--spring), opacity 0.4s var(--ease);
+        }
+        .winner-overlay.active .winner-card { transform: scale(1) translateY(0); opacity: 1; }
+        /* 닫힐 때 역방향 */
+        .winner-overlay.closing .winner-card {
+            transform: scale(0.85) translateY(30px); opacity: 0;
+            transition: transform 0.28s var(--ease), opacity 0.22s var(--ease);
+        }
+        .winner-label { font-size: 1rem; font-weight: 700; color: var(--ink-3); margin-bottom: 12px; letter-spacing: 2px; }
+        .winner-name-text { font-size: 3rem; font-weight: 800; color: var(--blue); margin-bottom: 32px; word-break: keep-all; }
+
+        /* Scrollbar */
+        .list-section::-webkit-scrollbar { width: 8px; }
+        .list-section::-webkit-scrollbar-thumb { background: var(--ink-4); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<canvas class="confetti-canvas" id="confetti-canvas"></canvas>
+
+<div id="winner-overlay" class="winner-overlay" onclick="closeWinner()">
+    <div class="winner-card" onclick="event.stopPropagation()">
+        <div class="winner-label">🎉 당첨자 발표</div>
+        <div id="winner-display" class="winner-name-text">이름 없음</div>
+        <button class="btn-spin" onclick="closeWinner()">확인</button>
+    </div>
+</div>
+
+<div class="app-shell">
+    <header>
+        <div class="brand">발표자 선정 시스템 <small style="font-size: 0.6em; opacity: 0.4; margin-left: 10px;">v132</small></div>
+        <button class="theme-btn" onclick="toggleTheme()" title="테마 변경">🌓</button>
+    </header>
+
+    <div class="layout-grid">
+        <!-- Roulette Side -->
+        <div class="wheel-section">
+            <div class="wheel-container" id="wheel-container">
+                <div class="wheel-pointer" id="wheel-pointer">
+                    <svg viewBox="0 0 30 40"><path d="M15 40L0 10C0 4.4 4.4 0 10 0H20C25.5 0 30 4.4 30 10L15 40Z" /></svg>
+                </div>
+                <canvas id="wheel-canvas" width="1000" height="1000"></canvas>
+            </div>
+            <button class="btn-spin" id="spin-button" onclick="manualSpin()">룰렛 돌리기</button>
+
+            <div id="history-box" class="mt-4 text-center" style="display:none;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: var(--ink-3); margin-bottom: 12px; letter-spacing: 1px; opacity: 0.6;">RECENT WINNERS</div>
+                <div class="d-flex flex-wrap justify-content-center gap-2" id="history-tags"></div>
+            </div>
+        </div>
+
+        <!-- Student Area -->
+        <div class="list-area">
+            <div class="class-selector mb-3">
+                <div class="d-flex gap-1">
+                    <button class="class-btn" data-class="3" onclick="loadClass(3)">3반</button>
+                    <button class="class-btn active" data-class="4" onclick="loadClass(4)">4반</button>
+                    <button class="class-btn" data-class="5" onclick="loadClass(5)">5반</button>
+                    <button class="class-btn" data-class="6" onclick="loadClass(6)">6반</button>
+                    <button class="class-btn" data-class="custom" onclick="loadClass('custom')">커스텀</button>
+                </div>
+            </div>
+
+            <div id="custom-panel" class="custom-input-area" style="display:none;">
+                <div class="custom-input-label">
+                    ✏️ 이름 직접 입력
+                    <span class="count-badge" id="name-count-badge">0명</span>
+                </div>
+                <textarea
+                    id="custom-names-input"
+                    class="custom-textarea"
+                    placeholder="홍길동 김철수 이영희&#10;또는: 홍길동, 김철수, 이영희&#10;줄바꿈·쉼표·공백 모두 OK"
+                    oninput="onCustomInput()"
+                ></textarea>
+                <div class="custom-hint">줄바꿈, 쉼표( , ), 공백 중 어떻게 구분해도 인식합니다.</div>
+                <div class="custom-actions">
+                    <button class="btn-apply" onclick="applyCustomNames()">룰렛에 적용 ✓</button>
+                    <button class="btn-clear-input" onclick="clearCustomInput()">지우기</button>
+                </div>
+            </div>
+
+            <button id="reset-weights-btn" class="w-100 mb-3"
+                style="border:none; background:var(--bg-deep); padding:14px; border-radius:20px; font-weight:700; color:var(--ink-2); cursor:pointer; font-size:0.95rem; transition: transform 0.15s var(--spring), color 0.2s;"
+                onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''"
+                onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''"
+                onclick="resetAllWeights()">모든 학생 가중치 초기화</button>
+
+            <div class="list-section">
+                <div id="student-container" class="student-grid"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const rawData = {
+        3: "강성훈 강현서 김건영 김민섭 김범준 김성곤 김준우 김현서 박서준 박주혁 박준현 박하준 서우찬 송현수 신경호 오승수 오호연 이완 정희윤 최대근 최민혁 하동헌",
+        4: "고근영 권민재 권희원 김가빈 김민규 김상혁 김준서 남규백 박기범 박명헌 박인우 배동규 성치윤 손화랑 심선호 이솔 이정운 정효진 조범수 천동현 최승민 허윤성",
+        5: "강동현 강문용 구도훈 김도진 김동현 김동훈 김민우 김윤현 박자원 백승주 손태형 원용준 은준서 이동엽 장우진 정슬우 정예찬 지연우 지후성 천우진 하태권 황재경",
+        6: "구충원 권도원 권우영 기동준 김민승 김상우 김재원 김주찬 류현동 박민혁 박선우 서정원 윤승규 이서진 이원우 이정빈 이정빈 이준우 전민준 정건 조윤도 최승민 최준"
+    };
+
+    // [개선7] 다크모드 대응 파레트: 라이트/다크 모드별로 채도·명도 구분
+    const paletteLt = ["#94b9ff","#b4e08f","#ffd58d","#ffadaa","#d9a7e6","#9bdad3","#cfd8dc"];
+    const paletteDk = ["#2a5cbf","#4a8a2a","#b07820","#b03040","#7040a0","#207868","#606878"];
+    function getPalette() {
+        return document.documentElement.getAttribute('data-theme') === 'dark' ? paletteDk : paletteLt;
+    }
+
+    let students = [];
+    let rotation = 0;
+    let velocity = 0;
+    let isSpinning = false;
+    let isDragging = false;
+    let lastAngle = 0;
+    let dragVelocity = 0;
+    let historyList = [];
+    let lastPointerIndex = -1;
+    let currentClass = 4;
+    let pendingCustomNames = [];
+
+    // [개선1] 포인터 댐핑 진동 상태
+    let pointerAngle = 0;      // 현재 포인터 각도 (deg)
+    let pointerVel   = 0;      // 각속도
+    const POINTER_STIFFNESS = 320;  // 스프링 강도
+    const POINTER_DAMPING   = 18;   // 감쇠
+    const POINTER_MASS      = 1;
+    let pointerRafId = null;
+    let pointerTarget = 0;     // 목표 각도
+
+    const canvas = document.getElementById('wheel-canvas');
+    const ctx = canvas.getContext('2d');
+    const pointerEl = document.getElementById('wheel-pointer');
+    const wheelContainer = document.getElementById('wheel-container');
+
+    function init() {
+        loadClass(4);
+        requestAnimationFrame(updateLoop);
+        setupGestures();
+        // 테마 변경 시 팔레트 반영
+        new MutationObserver(() => { syncPaletteToTheme(); })
+            .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    }
+
+    function syncPaletteToTheme() {
+        const pal = getPalette();
+        students.forEach((s, i) => { s.color = pal[i % pal.length]; });
+    }
+
+    /* ───────── 반 로딩 ───────── */
+    function loadClass(classKey) {
+        if (isSpinning) return;
+        currentClass = classKey;
+        document.querySelectorAll('.class-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.class === String(classKey));
+        });
+        const customPanel = document.getElementById('custom-panel');
+        if (classKey === 'custom') {
+            customPanel.style.display = 'block';
+            if (students.length === 0 || students._source !== 'custom') {
+                students = []; students._source = 'custom';
+            }
+            renderList();
+            updateNameCountBadge();
+        } else {
+            customPanel.style.display = 'none';
+            const pal = getPalette();
+            students = rawData[classKey].split(' ').map((name, idx) => ({
+                id: idx, name, weight: 1, currentWeight: 1, excluded: false, color: pal[idx % pal.length]
+            }));
+            renderList();
+        }
+    }
+
+    /* ───────── 커스텀 입력 ───────── */
+    function parseNames(raw) {
+        return raw.split(/[\n,\s]+/).map(n => n.trim()).filter(n => n.length > 0);
+    }
+    function onCustomInput() {
+        pendingCustomNames = parseNames(document.getElementById('custom-names-input').value);
+        updateNameCountBadge();
+    }
+    function updateNameCountBadge() {
+        const names = parseNames(document.getElementById('custom-names-input').value);
+        const badge = document.getElementById('name-count-badge');
+        badge.textContent = names.length + '명';
+        badge.style.background = names.length > 0 ? 'var(--green)' : 'var(--ink-4)';
+        badge.style.transform = 'scale(1.2)';
+        setTimeout(() => { badge.style.transform = ''; }, 150);
+    }
+    function applyCustomNames() {
+        const names = parseNames(document.getElementById('custom-names-input').value);
+        if (names.length === 0) {
+            Swal.fire({ toast: true, position: 'top', icon: 'warning', title: '이름을 한 명 이상 입력해주세요.', showConfirmButton: false, timer: 2000, background: 'var(--surface)', color: 'var(--ink)' });
+            return;
+        }
+        const pal = getPalette();
+        students = names.map((name, idx) => ({ id: idx, name, weight: 1, currentWeight: 1, excluded: false, color: pal[idx % pal.length] }));
+        students._source = 'custom';
+        renderList();
+        const btn = document.querySelector('.btn-apply');
+        const original = btn.textContent;
+        btn.textContent = '✓ 적용 완료!';
+        setTimeout(() => { btn.textContent = original; }, 1400);
+    }
+    function clearCustomInput() {
+        document.getElementById('custom-names-input').value = '';
+        pendingCustomNames = [];
+        updateNameCountBadge();
+    }
+
+    /* ───────── 제스처 ───────── */
+    function setupGestures() {
+        const container = document.getElementById('wheel-container');
+        const getAngle = (e) => {
+            const rect = container.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return Math.atan2(clientY - cy, clientX - cx);
+        };
+        const onStart = (e) => { if (isSpinning) return; isDragging = true; lastAngle = getAngle(e); dragVelocity = 0; };
+        const onMove  = (e) => {
+            if (!isDragging) return;
+            const cur = getAngle(e);
+            let delta = cur - lastAngle;
+            if (delta >  Math.PI) delta -= Math.PI * 2;
+            if (delta < -Math.PI) delta += Math.PI * 2;
+            rotation += delta * (180 / Math.PI);
+            dragVelocity = delta * (180 / Math.PI) * 2;
+            lastAngle = cur;
+        };
+        const onEnd = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            if (Math.abs(dragVelocity) > 1.0) { velocity = dragVelocity; isSpinning = true; }
+        };
+        container.addEventListener('mousedown', onStart);
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onEnd);
+        container.addEventListener('touchstart', onStart, { passive: false });
+        window.addEventListener('touchmove', (e) => { if (isDragging) e.preventDefault(); onMove(e); }, { passive: false });
+        window.addEventListener('touchend', onEnd);
+    }
+
+    /* ───────── 메인 루프 ───────── */
+    function updateLoop() {
+        if (isSpinning && !isDragging) {
+            rotation += velocity;
+            let friction = 0.985;
+            if (Math.abs(velocity) < 4.0) friction = 0.991;
+            velocity *= friction;
+            if (Math.abs(velocity) < 0.05) {
+                velocity = 0;
+                isSpinning = false;
+                // [개선2] 정지 순간 펄스
+                triggerStopPulse();
+                announceWinner();
+            }
+        }
+
+        const speed = Math.abs(velocity);
+        const blur    = 32 + speed * 1.5;
+        const opacity = 0.06 + Math.min(0.12, speed * 0.005);
+        const yOff    = 12 + speed * 0.4;
+        wheelContainer.style.boxShadow = `0 ${yOff}px ${blur}px rgba(0,0,0,${opacity}), 0 0 0 1px rgba(255,255,255,0.9) inset`;
+
+        students.forEach(s => {
+            const target = s.excluded ? 0 : s.weight;
+            s.currentWeight += (target - s.currentWeight) * 0.12;
+        });
+
+        drawWheel();
+        updatePointerPhysics(); // [개선1] 물리 포인터
+        requestAnimationFrame(updateLoop);
+    }
+
+    /* ───────── [개선2] 정지 펄스 ───────── */
+    function triggerStopPulse() {
+        wheelContainer.classList.remove('stop-pulse');
+        // reflow 강제
+        void wheelContainer.offsetWidth;
+        wheelContainer.classList.add('stop-pulse');
+        wheelContainer.addEventListener('animationend', () => {
+            wheelContainer.classList.remove('stop-pulse');
+        }, { once: true });
+    }
+
+    /* ───────── 룰렛 그리기 ───────── */
+    function drawWheel() {
+        const w = canvas.width, h = canvas.height, cx = w/2, cy = h/2;
+        const radius = w/2 - 20;
+        ctx.clearRect(0, 0, w, h);
+
+        const active = students.filter(s => s.currentWeight >= 0.001);
+        const total  = active.reduce((a, s) => a + s.currentWeight, 0);
+
+        if (total < 0.01 || active.length === 0) {
+            ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI*2);
+            ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#1c1f26' : '#f2f4f7';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(180,184,198,0.3)'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.font = "bold 36px 'Noto Sans KR'";
+            ctx.fillStyle = '#b4b8c6'; ctx.textAlign = 'center';
+            ctx.fillText('이름을 입력하세요', cx, cy + 12);
+            drawCenterCap(cx, cy);
+            return;
+        }
+
+        let startAngle = (rotation * Math.PI / 180) - (Math.PI / 2);
+        active.forEach(s => {
+            const sliceAngle = (s.currentWeight / total) * (Math.PI * 2);
+            ctx.beginPath(); ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, radius, startAngle, startAngle + sliceAngle);
+            ctx.closePath(); ctx.fillStyle = s.color; ctx.fill();
+            ctx.strokeStyle = "rgba(255,255,255,0.4)"; ctx.lineWidth = 2; ctx.stroke();
+            if (sliceAngle > 0.055) {
+                ctx.save(); ctx.translate(cx, cy); ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = "right"; ctx.fillStyle = "rgba(0,0,0,0.65)";
+                ctx.font = "bold 26px 'Noto Sans KR'";
+                ctx.fillText(s.name, radius - 55, 10);
+                ctx.restore();
+            }
+            startAngle += sliceAngle;
+        });
+
+        drawCenterCap(cx, cy);
+    }
+
+    function drawCenterCap(cx, cy) {
+        ctx.shadowBlur = 0;
+        ctx.beginPath(); ctx.arc(cx, cy, 40, 0, Math.PI*2);
+        ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#252a34' : '#fff';
+        ctx.shadowBlur = 15; ctx.shadowColor = "rgba(0,0,0,0.12)"; ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI*2);
+        ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#1c1f26' : '#e5e9f0';
+        ctx.fill();
+    }
+
+    /* ───────── [개선1] 포인터 댐핑 스프링 물리 ───────── */
+    function calcHitIndex() {
+        const active = students.filter(s => s.currentWeight >= 0.001);
+        const total  = active.reduce((a, s) => a + s.currentWeight, 0);
+        if (total < 0.01) return -1;
+        const norm = ((-rotation % 360) + 360) % 360;
+        let deg = 0;
+        for (let i = 0; i < active.length; i++) {
+            const slice = (active[i].currentWeight / total) * 360;
+            if (norm >= deg && norm < deg + slice) return i;
+            deg += slice;
+        }
+        return -1;
+    }
+
+    function updatePointerPhysics() {
+        const hitIdx = calcHitIndex();
+
+        // 슬라이스 경계를 넘을 때만 충격 인가
+        if (hitIdx !== lastPointerIndex && lastPointerIndex !== -1 && isSpinning) {
+            // 회전 방향에 맞게 충격 방향 결정
+            const dir = velocity >= 0 ? 1 : -1;
+            pointerVel += dir * -22;   // 반대 방향 반동
+        }
+        lastPointerIndex = hitIdx;
+
+        // 스프링-댐퍼 적분 (dt ≈ 1/60)
+        const dt = 1 / 60;
+        const force = -POINTER_STIFFNESS * (pointerAngle - pointerTarget) - POINTER_DAMPING * pointerVel;
+        pointerVel   += (force / POINTER_MASS) * dt;
+        pointerAngle += pointerVel * dt;
+
+        // 각도 클램프 (±35도)
+        pointerAngle = Math.max(-35, Math.min(35, pointerAngle));
+
+        pointerEl.style.transform = `translateX(-50%) rotate(${pointerAngle}deg)`;
+    }
+
+    /* ───────── 스핀 / 당첨 ───────── */
+    function manualSpin() {
+        if (isSpinning) return;
+        const active = students.filter(s => !s.excluded);
+        if (active.length === 0) {
+            Swal.fire({ toast: true, position: 'top', icon: 'warning', title: '참여할 학생이 없습니다.', showConfirmButton: false, timer: 2000, background: 'var(--surface)', color: 'var(--ink)' });
+            return;
+        }
+        velocity = 20 + Math.random() * 18;
+        isSpinning = true;
+    }
+
+    function announceWinner() {
+        const active = students.filter(s => s.currentWeight >= 0.001);
+        const total  = active.reduce((a, s) => a + s.currentWeight, 0);
+        const norm   = ((-rotation % 360) + 360) % 360;
+        let deg = 0, winner = null;
+        for (let i = 0; i < active.length; i++) {
+            const slice = (active[i].currentWeight / total) * 360;
+            if (norm >= deg && norm < deg + slice) { winner = active[i]; break; }
+            deg += slice;
+        }
+        if (winner) {
+            addHistory(winner.name);
+            startConfetti();
+            setTimeout(() => {
+                document.getElementById('winner-display').innerText = winner.name;
+                document.getElementById('winner-overlay').classList.add('active');
+            }, 50);
+        }
+    }
+
+    /* ───────── [개선5] winner 닫기 (역방향 아웃) ───────── */
+    function closeWinner() {
+        const overlay = document.getElementById('winner-overlay');
+        overlay.classList.add('closing');
+        overlay.classList.remove('active');
+        setTimeout(() => { overlay.classList.remove('closing'); }, 320);
+    }
+
+    /* ───────── [개선4] 카드 스태거 렌더 ───────── */
+    function renderList() {
+        const container = document.getElementById('student-container');
+        container.innerHTML = '';
+
+        if (students.length === 0 && currentClass === 'custom') {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="emoji">✏️</div>
+                    <p>위 입력창에 이름을 입력하고<br><strong>룰렛에 적용</strong>을 눌러주세요.</p>
+                </div>`;
+            return;
+        }
+
+        students.forEach((s, idx) => {
+            const card = document.createElement('div');
+            card.className = `student-card ${s.excluded ? 'excluded' : ''}`;
+            // 스태거: 카드마다 딜레이 부여 (최대 400ms 캡)
+            const delay = Math.min(idx * 38, 400);
+            card.style.animationDelay = delay + 'ms';
+            card.innerHTML = `
+                <div class="card-top">
+                    <div class="student-name" onclick="toggleExclude(${idx})">
+                        <div class="exclude-toggle ${!s.excluded ? 'active' : ''}">${!s.excluded ? '✓' : ''}</div>
+                        ${s.name}
+                    </div>
+                    <div class="weight-stepper">
+                        <button class="step-btn" onclick="event.stopPropagation(); updateWeight(${idx}, -1)">−</button>
+                        <div class="weight-val">${s.weight}</div>
+                        <button class="step-btn" onclick="event.stopPropagation(); updateWeight(${idx}, 1)">+</button>
+                    </div>
+                </div>
+                <div class="preset-btns">
+                    <button class="preset-btn" onclick="event.stopPropagation(); updateWeight(${idx}, 10)">+10x</button>
+                    <button class="preset-btn" onclick="event.stopPropagation(); updateWeight(${idx}, 50)">+50x</button>
+                    <button class="preset-btn" onclick="event.stopPropagation(); updateWeight(${idx}, 100)">+100x</button>
+                    <button class="preset-btn" style="margin-left:auto; opacity:0.6;" onclick="event.stopPropagation(); setWeight(${idx}, 1)">초기화</button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    /* 카드 하나만 상태 반영 — DOM 재생성 없이 클래스/텍스트만 패치 */
+    function patchCard(i) {
+        const cards = document.querySelectorAll('#student-container .student-card');
+        const card  = cards[i];
+        if (!card) return;
+        const s = students[i];
+
+        // excluded 상태
+        card.classList.toggle('excluded', s.excluded);
+
+        // 체크박스
+        const toggle = card.querySelector('.exclude-toggle');
+        toggle.classList.toggle('active', !s.excluded);
+        toggle.textContent = s.excluded ? '' : '✓';
+
+        // 가중치 숫자
+        card.querySelector('.weight-val').textContent = s.weight;
+    }
+
+    function updateWeight(i, d) {
+        students[i].weight = Math.max(1, students[i].weight + d);
+        patchCard(i);
+    }
+    function setWeight(i, v) {
+        students[i].weight = v;
+        patchCard(i);
+    }
+    function toggleExclude(i) {
+        students[i].excluded = !students[i].excluded;
+        patchCard(i);
+    }
+    function resetAllWeights() {
+        students.forEach((s, i) => {
+            s.weight = 1;
+            patchCard(i);
+        });
+    }
+
+    function addHistory(name) {
+        historyList.unshift(name); if (historyList.length > 8) historyList.pop();
+        document.getElementById('history-box').style.display = 'block';
+        document.getElementById('history-tags').innerHTML =
+            historyList.map(h => `<div class="history-tag">${h}</div>`).join('');
+    }
+
+    /* ───────── [개선6] 컨페티: 다양한 도형 + 회전 ───────── */
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const cCtx = confettiCanvas.getContext('2d');
+    let particles = [];
+
+    const SHAPES = ['circle', 'rect', 'triangle', 'star'];
+
+    function startConfetti() {
+        confettiCanvas.width  = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+        particles = [];
+        const pal = paletteLt; // 컨페티는 항상 밝은 색
+        for (let i = 0; i < 90; i++) {
+            const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+            particles.push({
+                x: window.innerWidth / 2,
+                y: window.innerHeight / 2,
+                vx: (Math.random() - 0.5) * 22,
+                vy: (Math.random() - 0.5) * 22 - 6,
+                color: pal[Math.floor(Math.random() * pal.length)],
+                size: Math.random() * 7 + 4,
+                life: 1,
+                shape,
+                angle: Math.random() * Math.PI * 2,
+                angularVel: (Math.random() - 0.5) * 0.25,
+            });
+        }
+        animateConfetti();
+    }
+
+    function drawParticle(p) {
+        cCtx.save();
+        cCtx.translate(p.x, p.y);
+        cCtx.rotate(p.angle);
+        cCtx.globalAlpha = Math.max(0, p.life);
+        cCtx.fillStyle = p.color;
+        const s = p.size;
+        cCtx.beginPath();
+        switch (p.shape) {
+            case 'circle':
+                cCtx.arc(0, 0, s, 0, Math.PI * 2);
+                break;
+            case 'rect':
+                cCtx.rect(-s, -s * 0.55, s * 2, s * 1.1);
+                break;
+            case 'triangle':
+                cCtx.moveTo(0, -s);
+                cCtx.lineTo(s * 0.866, s * 0.5);
+                cCtx.lineTo(-s * 0.866, s * 0.5);
+                cCtx.closePath();
+                break;
+            case 'star': {
+                const outer = s, inner = s * 0.45;
+                for (let pt = 0; pt < 5; pt++) {
+                    const ao = (pt * 2 * Math.PI / 5) - Math.PI / 2;
+                    const ai = ao + Math.PI / 5;
+                    if (pt === 0) cCtx.moveTo(Math.cos(ao) * outer, Math.sin(ao) * outer);
+                    else          cCtx.lineTo(Math.cos(ao) * outer, Math.sin(ao) * outer);
+                    cCtx.lineTo(Math.cos(ai) * inner, Math.sin(ai) * inner);
+                }
+                cCtx.closePath();
+                break;
+            }
+        }
+        cCtx.fill();
+        cCtx.restore();
+    }
+
+    function animateConfetti() {
+        cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x     += p.vx;
+            p.y     += p.vy;
+            p.vy    += 0.42;
+            p.life  -= 0.014;
+            p.angle += p.angularVel;
+            drawParticle(p);
+            if (p.life <= 0) particles.splice(i, 1);
+        }
+        if (particles.length > 0) requestAnimationFrame(animateConfetti);
+        else cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    }
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
