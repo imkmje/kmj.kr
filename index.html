@@ -1078,7 +1078,7 @@ document.querySelectorAll('.cdui-toggle').forEach(el => el.classList.add('toggle
 /* ══════════════════════════════════════
    Admin Mode
 ══════════════════════════════════════ */
-const ADMIN_HASH = '82a59fcfdb866f7cbb7ffffd93c250a7f00a4f4a4283a3fe3bead9122ad81bff';
+const ADMIN_HASH = 'b0ec4be11244be25fc9249d03040446fe55260e8965bb09e85ffe0f3a1d92d22';
 
 async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
