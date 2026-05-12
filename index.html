@@ -525,6 +525,48 @@ body.admin-mode .career-item-admin { display: flex; }
 }
 .career-del-btn:hover { background: var(--red); color: #fff; }
 
+/* about card admin */
+body.admin-mode .acard { position: relative; }
+.acard-del-btn {
+  display: none; position: absolute; top: 8px; right: 8px;
+  width: 26px; height: 26px; border-radius: 50%;
+  border: none; cursor: pointer; background: var(--bg-deep); color: var(--ink-3);
+  font-size: 11px; align-items: center; justify-content: center;
+  transition: background .15s, color .15s; z-index: 2;
+}
+body.admin-mode .acard-del-btn { display: flex; }
+.acard-del-btn:hover { background: var(--red); color: #fff; }
+
+/* tag controls */
+body.admin-mode .acard .tag { cursor: pointer; }
+body.admin-mode .acard .tag:hover { opacity: .8; }
+.tag-del {
+  display: none; margin-left: 3px; cursor: pointer; opacity: .55;
+  font-size: 9px; background: none; border: none; color: inherit;
+  padding: 0; line-height: 1; vertical-align: middle;
+}
+body.admin-mode .tag-del { display: inline; }
+.tag-del:hover { opacity: 1; }
+.tag-add-btn {
+  display: none; padding: 2px 9px; border-radius: var(--radius-pill);
+  border: 1.5px dashed var(--ink-4); background: none;
+  color: var(--ink-3); font-size: 11px; cursor: pointer;
+  font-family: var(--font); align-items: center; gap: 3px;
+}
+body.admin-mode .tag-add-btn { display: inline-flex; }
+.tag-add-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+/* about 카드 추가 버튼 */
+.admin-add-about { display: none; }
+body.admin-mode .admin-add-about { display: flex; }
+
+/* admin 확인 모달 */
+#confirmModal, #careerAddModal, #acardAddModal {
+  display: none; position: fixed; inset: 0; z-index: 5500;
+  background: rgba(10,12,20,0.55); backdrop-filter: blur(6px);
+  align-items: center; justify-content: center; padding: 24px;
+}
+
 /* admin 편집 모달 */
 #adminModal {
   position: fixed; inset: 0; z-index: 1000;
@@ -646,6 +688,70 @@ body.admin-mode .career-item-admin { display: flex; }
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
       <button onclick="closeTextEdit()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--bg-deep);color:var(--ink-3);font-family:var(--font);font-size:13px;font-weight:600;">취소</button>
       <button onclick="confirmTextEdit()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="confirmModal">
+  <div style="background:var(--surface);border-radius:var(--radius-xl);padding:28px 32px;max-width:320px;width:100%;box-shadow:var(--sh-lg);">
+    <div id="confirmMsg" style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:20px;">삭제할까요?</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeConfirm()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--bg-deep);color:var(--ink-3);font-family:var(--font);font-size:13px;font-weight:600;">취소</button>
+      <button id="confirmOkBtn" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--red);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- 약력 추가 모달 -->
+<div id="careerAddModal">
+  <div style="background:var(--surface);border-radius:var(--radius-xl);padding:32px 36px;max-width:400px;width:100%;box-shadow:var(--sh-lg);">
+    <div style="font-size:15px;font-weight:800;margin-bottom:20px;">약력 항목 추가</div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">연도</div>
+      <input id="ca-year" placeholder="예: 2024~" style="width:100%;padding:10px 14px;border:1.5px solid var(--bg-deep);border-radius:var(--radius);font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg);outline:none;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--bg-deep)'">
+    </div>
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">내용</div>
+      <input id="ca-title" placeholder="예: Google Certified Trainer 취득" style="width:100%;padding:10px 14px;border:1.5px solid var(--bg-deep);border-radius:var(--radius);font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg);outline:none;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--bg-deep)'">
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeCareerAdd()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--bg-deep);color:var(--ink-3);font-family:var(--font);font-size:13px;font-weight:600;">취소</button>
+      <button onclick="confirmCareerAdd()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- about 카드 추가 모달 -->
+<div id="acardAddModal">
+  <div style="background:var(--surface);border-radius:var(--radius-xl);padding:32px 36px;max-width:420px;width:100%;box-shadow:var(--sh-lg);">
+    <div style="font-size:15px;font-weight:800;margin-bottom:20px;">카드 추가</div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">아이콘 이모지</div>
+      <input id="ac-emoji" placeholder="예: 🧑‍🏫" style="width:100%;padding:10px 14px;border:1.5px solid var(--bg-deep);border-radius:var(--radius);font-family:var(--font);font-size:16px;color:var(--ink);background:var(--bg);outline:none;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--bg-deep)'">
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">제목</div>
+      <input id="ac-title" placeholder="예: 디자이너" style="width:100%;padding:10px 14px;border:1.5px solid var(--bg-deep);border-radius:var(--radius);font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg);outline:none;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--bg-deep)'">
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">설명</div>
+      <textarea id="ac-desc" rows="2" placeholder="한두 줄 소개" style="width:100%;padding:10px 14px;border:1.5px solid var(--bg-deep);border-radius:var(--radius);font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg);outline:none;resize:vertical;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--bg-deep)'"></textarea>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">태그 (쉼표 구분)</div>
+      <input id="ac-tags" placeholder="예: Figma, Canva" style="width:100%;padding:10px 14px;border:1.5px solid var(--bg-deep);border-radius:var(--radius);font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg);outline:none;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--bg-deep)'">
+    </div>
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">태그 색상</div>
+      <select id="ac-color" style="width:100%;padding:10px 14px;border:1.5px solid var(--bg-deep);border-radius:var(--radius);font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg);outline:none;">
+        <option value="blue">파랑</option>
+        <option value="green">초록</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeAcardAdd()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--bg-deep);color:var(--ink-3);font-family:var(--font);font-size:13px;font-weight:600;">취소</button>
+      <button onclick="confirmAcardAdd()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;">추가</button>
     </div>
   </div>
 </div>
@@ -802,30 +908,8 @@ body.admin-mode .career-item-admin { display: flex; }
     <section id="about">
       <div class="section-label">About</div>
       <h2 class="section-title">교육과 기술의<br>교차점</h2>
-      <div class="about-grid">
-        <div class="acard reveal">
-          <div class="acard-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-          </div>
-          <h3>교육자</h3>
-          <p>고등학교에서 학생 생활지도와 자율학습 관리를 담당합니다. 반복 업무를 자동화하고 데이터 기반으로 결정합니다.</p>
-          <div class="tag-row">
-            <span class="tag green">생활지도</span>
-            <span class="tag green">자율학습</span>
-          </div>
-        </div>
-        <div class="acard reveal" style="transition-delay:.1s">
-          <div class="acard-icon" style="background:var(--green-dim);color:var(--green)">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          </div>
-          <h3>개발자</h3>
-          <p>Google Apps Script와 단일 HTML로 실용적인 웹앱을 만듭니다. Google Sheets를 백엔드로 활용해 복잡한 인프라 없이 실용적인 도구를 구현합니다.</p>
-          <div class="tag-row">
-            <span class="tag blue">GAS</span>
-            <span class="tag blue">HTML/CSS/JS</span>
-          </div>
-        </div>
-      </div>
+      <div class="about-grid" id="aboutGrid"></div>
+      <button class="admin-add-btn admin-add-about" onclick="addAcard()">+ 카드 추가</button>
     </section>
 
     <!-- Career -->
@@ -917,6 +1001,61 @@ body.admin-mode .career-item-admin { display: flex; }
 ══════════════════════════════════════ */
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyvYSm3tqUgd9elH5eNNsw-5H6ArG9u6y3aduHHtnUvNsq7D1NN0mqxhZcMxo7jlys/exec';
 
+const FALLBACK_ABOUT = [
+  {
+    icon: 'teacher',
+    title: '교육자',
+    desc: '고등학교에서 학생 생활지도와 자율학습 관리를 담당합니다. 반복 업무를 자동화하고 데이터 기반으로 결정합니다.',
+    tags: [{text:'생활지도',color:'green'},{text:'자율학습',color:'green'}]
+  },
+  {
+    icon: 'developer',
+    title: '개발자',
+    desc: 'Google Apps Script와 단일 HTML로 실용적인 웹앱을 만듭니다. Google Sheets를 백엔드로 활용해 복잡한 인프라 없이 실용적인 도구를 구현합니다.',
+    tags: [{text:'GAS',color:'blue'},{text:'HTML/CSS/JS',color:'blue'}]
+  }
+];
+
+const ABOUT_ICONS = {
+  teacher:   `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
+  developer: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+};
+const ABOUT_ICON_STYLES = {
+  teacher:   '',
+  developer: 'background:var(--green-dim);color:var(--green)',
+};
+
+function renderAboutCards(cards) {
+  const grid = document.getElementById('aboutGrid');
+  grid.innerHTML = '';
+  cards.forEach((c, i) => {
+    const isEmoji = !ABOUT_ICONS[c.icon];
+    const iconHtml = isEmoji
+      ? `<span style="font-size:22px;line-height:1">${c.icon}</span>`
+      : ABOUT_ICONS[c.icon];
+    const iconStyle = ABOUT_ICON_STYLES[c.icon] || '';
+    const tagsHtml = (c.tags||[]).map(t =>
+      `<span class="tag ${t.color}" onclick="editAcardTag(this)">${t.text}<button class="tag-del" onclick="delAcardTag(event,this)">✕</button></span>`
+    ).join('');
+    const tagColor = (c.tags||[])[0]?.color || 'blue';
+    const card = document.createElement('div');
+    card.className = 'acard reveal';
+    card.style.transitionDelay = (i * 0.1) + 's';
+    card.dataset.idx = i;
+    card.innerHTML = `
+      <button class="acard-del-btn" onclick="delAcard(this)">✕</button>
+      <div class="acard-icon" style="${iconStyle}">${iconHtml}</div>
+      <h3>${c.title}</h3>
+      <p>${c.desc}</p>
+      <div class="tag-row">
+        ${tagsHtml}
+        <button class="tag-add-btn" onclick="addAcardTag(this,'${tagColor}')">+ 태그</button>
+      </div>`;
+    grid.appendChild(card);
+    requestAnimationFrame(() => io.observe(card));
+  });
+}
+
 // GAS 연동 전 fallback 데이터
 const FALLBACK_PROJECTS = [
   {
@@ -981,11 +1120,11 @@ function renderProjects(projects) {
 
 /* ── Sheets CMS 로드 ── */
 async function loadFromSheets() {
+  renderAboutCards(FALLBACK_ABOUT);
   if (!GAS_URL) { renderProjects(FALLBACK_PROJECTS); return; }
   try {
     const res = await fetch(GAS_URL);
     const data = await res.json();
-    // GAS가 { projects: [...], settings: {...} } 형태로 반환한다고 가정
     if (data.projects) renderProjects(data.projects);
     if (data.settings) applySettings(data.settings);
   } catch(e) {
@@ -1004,6 +1143,28 @@ function applySettings(s) {
     if (svg) btn.appendChild(svg);
     btn.appendChild(document.createTextNode(' ' + s.contact_email));
   }
+  if (s.career) {
+    try { renderCareerItems(JSON.parse(s.career)); } catch {}
+  }
+  if (s.about) {
+    try { renderAboutCards(JSON.parse(s.about)); } catch {}
+  }
+}
+
+function renderCareerItems(items) {
+  const list = document.getElementById('careerList');
+  list.innerHTML = '';
+  items.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className = 'career-item reveal';
+    if (i > 0) el.style.transitionDelay = (i * 0.08) + 's';
+    el.innerHTML = `
+      <div class="career-year editable-career-year">${item.year}</div>
+      <div class="career-title editable-career-title">${item.title}</div>
+      <div class="career-item-admin"><button class="career-del-btn" onclick="delCareer(this)">✕</button></div>`;
+    list.appendChild(el);
+    requestAnimationFrame(() => io.observe(el));
+  });
 }
 
 /* ── 모달 ── */
@@ -1159,15 +1320,28 @@ function registerEditable(el) {
 }
 
 function closeTextEdit() {
+  const input = document.getElementById('textEditInput');
+  input._onConfirm = null;
+  input.rows = 3;
   document.getElementById('textEditModal').style.display = 'none';
   _textEditTarget = null;
 }
 
 function confirmTextEdit() {
+  const input = document.getElementById('textEditInput');
+  if (input._onConfirm) { input._onConfirm(); closeTextEdit(); return; }
   if (!_textEditTarget) return;
-  const val = document.getElementById('textEditInput').value.trim();
-  if (_textEditTarget.id === 'heroDesc') _textEditTarget.innerHTML = val.replace(/\n/g,'<br>');
-  else _textEditTarget.textContent = val;
+  const val = input.value.trim();
+  if (_textEditTarget._isTag) {
+    const delBtn = _textEditTarget.querySelector('.tag-del');
+    _textEditTarget.textContent = val;
+    if (delBtn) _textEditTarget.appendChild(delBtn);
+    delete _textEditTarget._isTag;
+  } else if (_textEditTarget.id === 'heroDesc') {
+    _textEditTarget.innerHTML = val.replace(/\n/g,'<br>');
+  } else {
+    _textEditTarget.textContent = val;
+  }
   closeTextEdit();
 }
 
@@ -1255,24 +1429,140 @@ function adminModalConfirm() {
 
 function adminAddProject()        { adminEditingIdx = -1; openAdminModal('프로젝트 추가', {}); }
 function adminEditProject(e, i)   { e.stopPropagation(); adminEditingIdx = i; openAdminModal('프로젝트 편집', adminCurrentProjects[i]); }
-function adminDelProject(e, i)    { e.stopPropagation(); if (confirm('삭제할까요?')) { adminCurrentProjects.splice(i, 1); renderProjects(adminCurrentProjects); }}
+function adminDelProject(e, i)    { e.stopPropagation(); showConfirm('프로젝트를 삭제할까요?', () => { adminCurrentProjects.splice(i, 1); renderProjects(adminCurrentProjects); }); }
+
+/* ── 확인 모달 ── */
+let _confirmCb = null;
+function showConfirm(msg, cb) {
+  document.getElementById('confirmMsg').textContent = msg;
+  _confirmCb = cb;
+  document.getElementById('confirmModal').style.display = 'flex';
+}
+function closeConfirm() {
+  document.getElementById('confirmModal').style.display = 'none';
+  _confirmCb = null;
+}
+document.getElementById('confirmOkBtn').addEventListener('click', () => {
+  if (_confirmCb) _confirmCb();
+  closeConfirm();
+});
 
 /* ── 약력 추가/삭제 ── */
 function addCareer() {
-  const year  = prompt('연도 (예: 2024~)') || '';
-  const title = prompt('내용') || '';
+  document.getElementById('ca-year').value  = '';
+  document.getElementById('ca-title').value = '';
+  document.getElementById('careerAddModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('ca-year').focus(), 50);
+}
+function closeCareerAdd() {
+  document.getElementById('careerAddModal').style.display = 'none';
+}
+function confirmCareerAdd() {
+  const year  = document.getElementById('ca-year').value.trim();
+  const title = document.getElementById('ca-title').value.trim();
   if (!title) return;
+  closeCareerAdd();
   const list = document.getElementById('careerList');
   const item = document.createElement('div');
   item.className = 'career-item';
   item.innerHTML = `
-    <div class="career-year editable-career-year editable" contenteditable="true">${year}</div>
-    <div class="career-title editable-career-title editable" contenteditable="true">${title}</div>
+    <div class="career-year editable-career-year">${year}</div>
+    <div class="career-title editable-career-title">${title}</div>
     <div class="career-item-admin"><button class="career-del-btn" onclick="delCareer(this)">✕</button></div>`;
   list.appendChild(item);
+  registerEditable(item.querySelector('.career-year'));
+  registerEditable(item.querySelector('.career-title'));
 }
+document.getElementById('ca-title').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmCareerAdd();
+  if (e.key === 'Escape') closeCareerAdd();
+});
+
 function delCareer(btn) {
-  if (confirm('삭제할까요?')) btn.closest('.career-item').remove();
+  showConfirm('약력 항목을 삭제할까요?', () => btn.closest('.career-item').remove());
+}
+
+/* ── About 카드 추가/삭제/태그 편집 ── */
+function addAcard() {
+  ['ac-emoji','ac-title','ac-desc','ac-tags'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('ac-color').value = 'blue';
+  document.getElementById('acardAddModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('ac-emoji').focus(), 50);
+}
+function closeAcardAdd() {
+  document.getElementById('acardAddModal').style.display = 'none';
+}
+function confirmAcardAdd() {
+  const emoji = document.getElementById('ac-emoji').value.trim() || '📌';
+  const title = document.getElementById('ac-title').value.trim();
+  const desc  = document.getElementById('ac-desc').value.trim();
+  const color = document.getElementById('ac-color').value;
+  const tags  = document.getElementById('ac-tags').value.split(',').map(t=>t.trim()).filter(Boolean)
+                       .map(t => ({text:t, color}));
+  if (!title) return;
+  closeAcardAdd();
+  const tagsHtml = tags.map(t =>
+    `<span class="tag ${t.color}" onclick="editAcardTag(this)">${t.text}<button class="tag-del" onclick="delAcardTag(event,this)">✕</button></span>`
+  ).join('');
+  const grid = document.getElementById('aboutGrid');
+  const card = document.createElement('div');
+  card.className = 'acard reveal in';
+  card.innerHTML = `
+    <button class="acard-del-btn" onclick="delAcard(this)">✕</button>
+    <div class="acard-icon"><span style="font-size:22px;line-height:1">${emoji}</span></div>
+    <h3>${title}</h3>
+    <p>${desc}</p>
+    <div class="tag-row">
+      ${tagsHtml}
+      <button class="tag-add-btn" onclick="addAcardTag(this,'${color}')">+ 태그</button>
+    </div>`;
+  grid.appendChild(card);
+  registerEditable(card.querySelector('h3'));
+  registerEditable(card.querySelector('p'));
+}
+
+function delAcard(btn) {
+  showConfirm('카드를 삭제할까요?', () => btn.closest('.acard').remove());
+}
+
+function editAcardTag(tagEl) {
+  if (!document.body.classList.contains('admin-mode')) return;
+  _textEditTarget = tagEl;
+  _textEditTarget._isTag = true;
+  document.getElementById('textEditLabel').textContent = '태그 수정';
+  const input = document.getElementById('textEditInput');
+  input.value = [...tagEl.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+  document.getElementById('textEditModal').style.display = 'flex';
+  setTimeout(() => input.focus(), 50);
+}
+
+function addAcardTag(btn, defaultColor) {
+  const tagRow = btn.closest('.tag-row');
+  const color  = defaultColor || 'blue';
+  _textEditTarget = null;
+  document.getElementById('textEditLabel').textContent = '새 태그 추가';
+  const input = document.getElementById('textEditInput');
+  input.value = '';
+  input.rows  = 1;
+  const modal = document.getElementById('textEditModal');
+  modal.style.display = 'flex';
+  input._onConfirm = () => {
+    const text = input.value.trim();
+    if (!text) return;
+    const span = document.createElement('span');
+    span.className = `tag ${color}`;
+    span.setAttribute('onclick', 'editAcardTag(this)');
+    span.innerHTML = `${text}<button class="tag-del" onclick="delAcardTag(event,this)">✕</button>`;
+    tagRow.insertBefore(span, btn);
+    input._onConfirm = null;
+    input.rows = 3;
+  };
+  setTimeout(() => input.focus(), 50);
+}
+
+function delAcardTag(e, btn) {
+  e.stopPropagation();
+  btn.closest('.tag').remove();
 }
 
 /* ── 저장 ── */
@@ -1294,6 +1584,30 @@ async function adminSave() {
     title: el.querySelector('.career-title')?.textContent.trim() || '',
   }));
   settings.career = JSON.stringify(careerItems);
+
+  // about 카드 수집
+  const aboutCards = [...document.querySelectorAll('#aboutGrid .acard')].map(card => {
+    const iconEl = card.querySelector('.acard-icon');
+    const svgCheck = iconEl?.querySelector('svg');
+    let icon = 'custom';
+    if (svgCheck) {
+      const path = svgCheck.querySelector('path')?.getAttribute('d') || '';
+      icon = path.includes('22 10') ? 'teacher' : 'developer';
+    } else {
+      icon = iconEl?.querySelector('span')?.textContent || '📌';
+    }
+    const tags = [...card.querySelectorAll('.tag-row .tag')].map(t => ({
+      text:  [...t.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim(),
+      color: t.classList.contains('green') ? 'green' : 'blue',
+    }));
+    return {
+      icon,
+      title: card.querySelector('h3')?.textContent.trim() || '',
+      desc:  card.querySelector('p')?.textContent.trim()  || '',
+      tags,
+    };
+  });
+  settings.about = JSON.stringify(aboutCards);
 
   const formData = new URLSearchParams();
   formData.append('data', JSON.stringify({ settings, projects: adminCurrentProjects }));
