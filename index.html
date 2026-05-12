@@ -463,16 +463,32 @@ footer span { color: var(--blue); }
 body.admin-mode { padding-top: 44px; }
 body.admin-mode .editable {
   outline: 2px solid var(--blue) !important;
-  border-radius: 6px; cursor: text;
-  min-width: 20px; min-height: 1em;
+  border-radius: 6px; cursor: pointer !important;
   background: rgba(59,125,248,0.07) !important;
-  padding: 2px 6px;
-  -webkit-text-fill-color: inherit !important;
-  color: var(--ink) !important;
 }
-body.admin-mode .editable:focus {
+body.admin-mode .editable:hover {
   background: rgba(59,125,248,0.13) !important;
-  outline: 2.5px solid var(--blue) !important;
+}
+
+/* 편집 오버레이 */
+.admin-edit-overlay {
+  position: absolute; z-index: 10000;
+  background: var(--surface); border: 2px solid var(--blue);
+  border-radius: var(--radius); padding: 10px 12px;
+  box-shadow: 0 8px 32px rgba(59,125,248,0.25);
+  min-width: 260px;
+}
+.admin-edit-overlay input,
+.admin-edit-overlay textarea {
+  width: 100%; border: none; outline: none;
+  background: transparent; resize: vertical;
+  font-family: var(--font); font-size: 14px;
+  color: var(--ink); line-height: 1.6;
+}
+.admin-edit-overlay textarea { min-height: 64px; }
+.admin-edit-hint {
+  font-size: 10px; color: var(--ink-4); margin-top: 6px;
+  font-family: var(--font);
 }
 
 /* 프로젝트 카드 admin 컨트롤 */
@@ -736,7 +752,7 @@ body.admin-mode .career-item-admin { display: flex; }
     <section id="hero">
       <div class="hero-greeting">Portfolio</div>
       <h1 class="hero-title">
-        더 나은<br>
+        <span class="hero-line-1">더 나은</span><br>
         <em>교육 현장을</em><br>
         <span class="line-accent">바라 보기 위해.</span>
       </h1>
@@ -1060,35 +1076,85 @@ function enterAdminMode() {
   document.body.classList.add('admin-mode');
   document.getElementById('adminBar').style.display = 'flex';
 
-  // 텍스트 요소 편집 가능하게
-  const targets = [
-    document.querySelector('.hero-title'),
-    document.getElementById('heroDesc'),
-    document.getElementById('contactSub'),
-    document.querySelector('.sb-tagline'),
-    document.querySelector('#about .section-title'),
-    document.querySelector('#career .section-title'),
-    document.querySelector('#projects .section-title'),
-    document.querySelector('#contact .section-title'),
-    ...document.querySelectorAll('.acard h3'),
-    ...document.querySelectorAll('.acard p'),
-    ...document.querySelectorAll('.editable-career-year'),
-    ...document.querySelectorAll('.editable-career-title'),
+  const configs = [
+    { sel: '.hero-line-1',               multi: false },
+    { sel: '.hero-title em',             multi: false },
+    { sel: '.hero-title .line-accent',   multi: false },
+    { sel: '#heroDesc',                  multi: true  },
+    { sel: '#contactSub',                multi: true  },
+    { sel: '.sb-tagline',                multi: false },
+    { sel: '#about .section-title',      multi: false },
+    { sel: '#career .section-title',     multi: false },
+    { sel: '#projects .section-title',   multi: false },
+    { sel: '#contact .section-title',    multi: false },
   ];
-  targets.forEach(el => {
-    if (!el) return;
-    el.contentEditable = 'true';
-    el.spellcheck = false;
-    el.classList.add('editable');
+  configs.forEach(({ sel, multi }) => {
+    const el = document.querySelector(sel);
+    if (el) attachEditOverlay(el, multi);
+  });
+  document.querySelectorAll('.acard h3, .acard p').forEach(el => attachEditOverlay(el, el.tagName==='P'));
+  document.querySelectorAll('.editable-career-year, .editable-career-title').forEach(el => attachEditOverlay(el, false));
+}
+
+function attachEditOverlay(el, multiline) {
+  el.classList.add('editable');
+  el.addEventListener('click', function(e) {
+    if (!document.body.classList.contains('admin-mode')) return;
+    e.stopPropagation();
+    openEditOverlay(el, multiline);
   });
 }
 
+function openEditOverlay(el, multiline) {
+  document.querySelectorAll('.admin-edit-overlay').forEach(o => o.remove());
+
+  const rect = el.getBoundingClientRect();
+  const overlay = document.createElement('div');
+  overlay.className = 'admin-edit-overlay';
+  overlay.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
+  overlay.style.left = Math.max(rect.left + window.scrollX, 10) + 'px';
+
+  const field = multiline ? document.createElement('textarea') : document.createElement('input');
+  field.value = el.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+  if (multiline) field.rows = 3;
+
+  const hint = document.createElement('div');
+  hint.className = 'admin-edit-hint';
+  hint.textContent = multiline ? 'Ctrl+Enter 저장  ·  Esc 취소' : 'Enter 저장  ·  Esc 취소';
+
+  overlay.append(field, hint);
+  document.body.appendChild(overlay);
+  field.focus();
+
+  function save() {
+    const v = field.value.trim();
+    if (el.id === 'heroDesc') el.innerHTML = v.replace(/\n/g, '<br>');
+    else el.textContent = v;
+    overlay.remove();
+  }
+
+  field.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { overlay.remove(); return; }
+    if (e.key === 'Enter' && !multiline) { e.preventDefault(); save(); }
+    if (e.key === 'Enter' &&  multiline && (e.ctrlKey || e.metaKey)) { e.preventDefault(); save(); }
+  });
+
+  setTimeout(() => {
+    function outside(e) {
+      if (!overlay.contains(e.target) && e.target !== el) {
+        save();
+        document.removeEventListener('click', outside);
+      }
+    }
+    document.addEventListener('click', outside);
+  }, 100);
+}
+
 function exitAdmin() {
+  document.querySelectorAll('.admin-edit-overlay').forEach(o => o.remove());
   document.body.classList.remove('admin-mode');
   document.getElementById('adminBar').style.display = 'none';
-  document.querySelectorAll('.editable').forEach(el => {
-    el.contentEditable = 'false'; el.classList.remove('editable');
-  });
+  document.querySelectorAll('.editable').forEach(el => el.classList.remove('editable'));
 }
 
 /* ── 프로젝트 admin 렌더 ── */
