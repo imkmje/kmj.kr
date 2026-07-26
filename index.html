@@ -903,8 +903,9 @@ body.admin-mode .admin-add-about { display: flex; }
       <input id="lf-label" placeholder="이름 (선택)">
       <button onclick="addLink()" style="padding:9px 18px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;white-space:nowrap;flex-shrink:0;">+ 추가</button>
     </div>
-    <div style="display:flex;justify-content:flex-end;margin-top:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;">
       <button onclick="closeLinksPanel()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--bg-deep);color:var(--ink-3);font-family:var(--font);font-size:13px;font-weight:600;">닫기</button>
+      <button id="linksSaveBtn" onclick="saveLinks()" style="padding:9px 22px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;">GitHub에 저장</button>
     </div>
   </div>
 </div>
@@ -2154,6 +2155,38 @@ function openLinksPanel() {
 
 function closeLinksPanel() {
   document.getElementById('linksPanel').style.display = 'none';
+}
+
+async function saveLinks() {
+  const token = getToken();
+  if (!token) { closeLinksPanel(); toggleTokenInput(); return; }
+  const btn = document.getElementById('linksSaveBtn');
+  btn.textContent = '저장 중…'; btn.disabled = true;
+
+  const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+  try {
+    let sha, existing = {};
+    const getRes = await fetch(GH_API, { headers });
+    if (getRes.ok) {
+      const meta = await getRes.json();
+      sha = meta.sha;
+      existing = JSON.parse(atob(meta.content.replace(/\n/g, '')));
+    } else if (getRes.status !== 404) throw new Error(`GET ${getRes.status}`);
+
+    const merged = { ...existing, links: adminCurrentLinks };
+    const payload = JSON.stringify(merged, null, 2);
+    const putBody = { message: 'Update short links', branch: GH_BRANCH, content: btoa(unescape(encodeURIComponent(payload))) };
+    if (sha) putBody.sha = sha;
+
+    const putRes = await fetch(GH_API, { method: 'PUT', headers, body: JSON.stringify(putBody) });
+    if (!putRes.ok) { const e = await putRes.json(); throw new Error(e.message || putRes.status); }
+
+    btn.textContent = '저장됨 ✓';
+    setTimeout(() => { btn.textContent = 'GitHub에 저장'; btn.disabled = false; }, 2000);
+  } catch (e) {
+    btn.textContent = `실패: ${e.message}`; btn.disabled = false;
+    setTimeout(() => { btn.textContent = 'GitHub에 저장'; }, 3000);
+  }
 }
 
 document.getElementById('linksPanel').addEventListener('click', e => {
