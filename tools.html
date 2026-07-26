@@ -522,6 +522,7 @@ function addLink() {
     return;
   }
   links.push({ code, url, ...(label && { label }) });
+  _linksDirty = true;
   renderLinks();
   document.getElementById('lf-code').value  = '';
   document.getElementById('lf-url').value   = '';
@@ -531,6 +532,7 @@ function addLink() {
 
 function deleteLink(i) {
   links.splice(i, 1);
+  _linksDirty = true;
   renderLinks();
 }
 
@@ -567,7 +569,7 @@ async function saveLinks() {
     const putRes = await fetch(GH_API, { method: 'PUT', headers, body: JSON.stringify(putBody) });
     if (!putRes.ok) { const e = await putRes.json(); throw new Error(e.message || putRes.status); }
 
-    btn.textContent = '저장됨 ✓';
+    btn.textContent = '저장됨 ✓'; _linksDirty = false;
     document.getElementById('linksHint').textContent = '';
     setTimeout(() => { btn.textContent = 'GitHub에 저장'; btn.disabled = false; }, 2000);
   } catch (e) {
@@ -582,6 +584,7 @@ document.getElementById('lf-url').addEventListener('keydown', e => {
 
 /* ── feature flags ── */
 let _flagsDirty = false;
+let _linksDirty = false;
 const FLAG_IDS = ['showTicker', 'showContactModal', 'enableSearchFilter', 'enableSkeletonUI', 'showStats', 'enableQRCode', 'enableBookmark', 'showFAQ'];
 
 function onFlagChange() { _flagsDirty = true; }
@@ -707,6 +710,20 @@ async function loadLinks() {
     document.getElementById('linksHint').textContent = '';
   }
 }
+
+/* ── 미저장 이탈 경고 ── */
+window.addEventListener('beforeunload', e => {
+  if (_flagsDirty || _linksDirty) { e.preventDefault(); e.returnValue = ''; }
+});
+
+/* ── 이미 로그인 상태면 비밀번호 건너뜀 ── */
+(function() {
+  if (sessionStorage.getItem('kmjkr_admin_sess') === '1') {
+    document.getElementById('lockScreen').style.display  = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    initTools();
+  }
+})();
 </script>
 </body>
 </html>

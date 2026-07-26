@@ -1488,7 +1488,7 @@ html[data-theme="dark"] .stat-card::after { opacity: 0; }
     <footer>
       <div class="footer-inner">
         <div class="footer-copy">
-          <span>KMJ</span> &nbsp;·&nbsp; 고등학교 국어 교사<br>
+          <span>KMJ</span> &nbsp;·&nbsp; <span class="footer-tagline">고등학교 국어 교사</span><br>
           © 2026 kmj.kr
         </div>
         <div class="footer-right">
@@ -1766,7 +1766,7 @@ function applySettings(s) {
   if (s.hero_em)        set('.hero-title em', s.hero_em);
   if (s.hero_accent)    set('.hero-title .line-accent', s.hero_accent);
   if (s.hero_desc)      document.getElementById('heroDesc').innerHTML = s.hero_desc.replace(/\n/g,'<br>');
-  if (s.tagline)        set('.sb-tagline', s.tagline);
+  if (s.tagline)        { set('.sb-tagline', s.tagline); set('.footer-tagline', s.tagline); }
   if (s.about_title)    set('#about .section-title', s.about_title);
   if (s.career_title)   set('#career .section-title', s.career_title);
   if (s.projects_title) set('#projects .section-title', s.projects_title);
@@ -1784,6 +1784,11 @@ function applySettings(s) {
   if (s.career) { try { renderCareerItems(JSON.parse(s.career)); } catch {} }
   if (s.about)  { try { renderAboutCards(JSON.parse(s.about));   } catch {} }
   if (s.notes)  { try { renderNotes(JSON.parse(s.notes));        } catch {} }
+  if (s.faq_title) set('#faq .section-title', s.faq_title);
+  if (s.hero_badges) { try { const bs = JSON.parse(s.hero_badges); document.querySelectorAll('.hero-badge strong').forEach((el, i) => { if (bs[i] !== undefined) el.textContent = bs[i]; }); } catch {} }
+  if (s.footer_badges) { try { const bs = JSON.parse(s.footer_badges); document.querySelectorAll('.footer-badge').forEach((el, i) => { if (bs[i] !== undefined) el.textContent = bs[i]; }); } catch {} }
+  if (s.stats_items) { try { const items = JSON.parse(s.stats_items); document.querySelectorAll('.stat-card').forEach((card, i) => { if (!items[i]) return; const num = card.querySelector('.stat-num'); const lbl = card.querySelector('.stat-label'); if (num) { num.setAttribute('data-target', items[i].num); num.setAttribute('data-suffix', items[i].suffix || ''); num.textContent = items[i].num + (items[i].suffix || ''); } if (lbl && items[i].label) lbl.textContent = items[i].label; }); } catch {} }
+  if (s.faq_items) { try { renderFaq(JSON.parse(s.faq_items)); _faqInited = true; } catch {} }
 }
 
 function renderCareerItems(items) {
@@ -1935,24 +1940,28 @@ document.getElementById('pwInput')?.addEventListener('keydown', e => {
 
 let adminCurrentProjects = [];
 let adminEditingIdx = -1;
+let _adminDirty = false;
 
 function enterAdminMode() {
   history.replaceState({}, '', location.pathname);
   document.body.classList.add('admin-mode');
   document.getElementById('adminBar').style.display = 'flex';
+  sessionStorage.setItem('kmjkr_admin_sess', '1');
 
   const sels = [
     '.hero-line-1', '.hero-title em', '.hero-title .line-accent',
     '#heroDesc', '#contactSub', '.sb-tagline',
     '#about .section-title', '#career .section-title',
     '#projects .section-title', '#notes .section-title', '#contact .section-title',
+    '#faq .section-title', '.hero-initial', '.footer-tagline',
   ];
   sels.forEach(sel => {
     const el = document.querySelector(sel);
     if (el) registerEditable(el);
   });
-  document.querySelectorAll('.acard h3, .acard p, .editable-career-year, .editable-career-title')
-    .forEach(el => registerEditable(el));
+  document.querySelectorAll('.acard h3, .acard p, .editable-career-year, .editable-career-title').forEach(el => registerEditable(el));
+  document.querySelectorAll('.hero-badge strong, .footer-badge, .stat-num, .stat-label').forEach(el => registerEditable(el));
+  document.querySelectorAll('#faqList .faq-q span, #faqList .faq-a').forEach(el => registerEditable(el));
 }
 
 let _textEditTarget = null;
@@ -1999,7 +2008,15 @@ function confirmTextEdit() {
     _textEditTarget.innerHTML = val.replace(/\n/g,'<br>');
   } else {
     _textEditTarget.textContent = val;
+    if (_textEditTarget.hasAttribute('data-target')) {
+      const m = val.match(/^(\d+(?:\.\d+)?)/);
+      if (m) {
+        _textEditTarget.setAttribute('data-target', m[1]);
+        _textEditTarget.setAttribute('data-suffix', val.slice(m[1].length));
+      }
+    }
   }
+  _adminDirty = true;
   closeTextEdit();
 }
 
@@ -2010,6 +2027,8 @@ document.getElementById('textEditInput')?.addEventListener('keydown', e => {
 });
 
 function exitAdmin() {
+  if (_adminDirty && !confirm('저장하지 않은 변경사항이 있습니다. 관리자 모드를 종료하시겠습니까?')) return;
+  _adminDirty = false;
   document.body.classList.remove('admin-mode');
   document.getElementById('adminBar').style.display = 'none';
   document.querySelectorAll('[style*="outline"]').forEach(el => {
@@ -2489,6 +2508,11 @@ async function adminSave() {
     contact_title:   txt('#contact .section-title'),
     contact_sub:     document.getElementById('contactSub').textContent.trim(),
     contact_email:   contactBtn.href.replace('mailto:',''),
+    faq_title:       txt('#faq .section-title'),
+    hero_badges:     JSON.stringify([...document.querySelectorAll('.hero-badge strong')].map(e => e.textContent.trim())),
+    footer_badges:   JSON.stringify([...document.querySelectorAll('.footer-badge')].map(e => e.textContent.trim())),
+    stats_items:     JSON.stringify([...document.querySelectorAll('.stat-card')].map(c => ({ num: c.querySelector('.stat-num')?.getAttribute('data-target') || '', suffix: c.querySelector('.stat-num')?.getAttribute('data-suffix') || '', label: c.querySelector('.stat-label')?.textContent.trim() || '' }))),
+    faq_items:       JSON.stringify([...document.querySelectorAll('#faqList .faq-item')].map(item => ({ q: item.querySelector('.faq-q span')?.textContent.trim() || '', a: item.querySelector('.faq-a')?.textContent.trim() || '' }))),
   };
 
   const careerItems = [...document.querySelectorAll('#careerList .career-item')].map(el => ({
@@ -2532,6 +2556,7 @@ async function adminSave() {
     if (!putRes.ok) { const e = await putRes.json(); throw new Error(e.message || putRes.status); }
 
     saveCache({ projects: adminCurrentProjects, settings, links: adminCurrentLinks });
+    _adminDirty = false;
     btn.textContent = '저장됨 ✓';
     setTimeout(() => { btn.textContent = '저장'; btn.disabled = false; }, 2000);
   } catch (e) {
@@ -2664,12 +2689,23 @@ function renderFaq(items) {
       </button>
       <div class="faq-a">${item.a}</div>`;
     list.appendChild(el);
-    requestAnimationFrame(() => io.observe(el));
+    requestAnimationFrame(() => {
+      io.observe(el);
+      if (document.body.classList.contains('admin-mode')) {
+        registerEditable(el.querySelector('.faq-q span'));
+        registerEditable(el.querySelector('.faq-a'));
+      }
+    });
   });
 }
 function toggleFaq(btn) {
   btn.closest('.faq-item').classList.toggle('open');
 }
+
+/* ── 미저장 이탈 경고 ── */
+window.addEventListener('beforeunload', e => {
+  if (_adminDirty) { e.preventDefault(); e.returnValue = ''; }
+});
 
 /* ── 초기 로드 ── */
 loadData();
