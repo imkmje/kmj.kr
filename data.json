@@ -1,6 +1,6 @@
 {
   "features": {
-    "showTicker": true,
+    "showTicker": false,
     "showContactModal": true,
     "enableSearchFilter": true,
     "enableSkeletonUI": true
