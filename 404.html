@@ -48,7 +48,10 @@
   var code = path.slice(4); // strip "/go/"
   if (!code) { show404(); return; }
 
-  fetch('https://raw.githubusercontent.com/imkmje/kmj.kr/main/data.json?t=' + Date.now())
+  fetch('https://api.github.com/repos/imkmje/kmj.kr/contents/data.json', {
+    headers: { Accept: 'application/vnd.github.v3.raw' },
+    cache: 'no-store'
+  })
     .then(function (r) { return r.json(); })
     .then(function (data) {
       var links = data.links || [];
