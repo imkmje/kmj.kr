@@ -417,7 +417,7 @@ async function saveLinks() {
     if (getRes.ok) {
       const meta = await getRes.json();
       sha = meta.sha;
-      existing = JSON.parse(atob(meta.content.replace(/\n/g, '')));
+      existing = JSON.parse(decodeURIComponent(escape(atob(meta.content.replace(/\n/g, '')))));
     } else if (getRes.status !== 404) throw new Error(`GET ${getRes.status}`);
 
     const merged = { ...existing, links };
