@@ -1685,7 +1685,7 @@ async function loadData() {
     if (data.ticker) siteTickerText = data.ticker;
     applyFeatures(siteFeatures, siteTickerText);
     if (fresh !== old) {
-      if (data.projects?.length) renderProjects(data.projects);
+      if (data.projects?.length && !document.body.classList.contains('admin-mode')) renderProjects(data.projects);
       if (data.settings) applySettings(data.settings);
     }
   } catch { /* data.json 없거나 네트워크 오류 → 캐시/fallback 사용 */ }
@@ -1947,6 +1947,8 @@ function enterAdminMode() {
   document.body.classList.add('admin-mode');
   document.getElementById('adminBar').style.display = 'flex';
   sessionStorage.setItem('kmjkr_admin_sess', '1');
+  // 카운트업 인터벌이 남아있으면 정지 (stat-num 편집 충돌 방지)
+  if (window._statTimers) window._statTimers.forEach(t => clearInterval(t));
 
   const sels = [
     '.hero-line-1', '.hero-title em', '.hero-title .line-accent',
@@ -2188,6 +2190,7 @@ function adminModalConfirm() {
     }
     if (adminEditingIdx >= 0) adminCurrentProjects[adminEditingIdx] = p;
     else adminCurrentProjects.push(p);
+    _adminDirty = true;
     renderProjects(adminCurrentProjects);
     closeAdminModal();
   };
@@ -2644,6 +2647,8 @@ function initStatsCountup() {
   const section = document.getElementById('stats');
   if (!section) return;
   const startCountup = () => {
+    if (document.body.classList.contains('admin-mode')) return;
+    window._statTimers = [];
     section.querySelectorAll('.stat-num').forEach(el => {
       const target = parseInt(el.dataset.target || '0');
       const suffix = el.dataset.suffix || '';
@@ -2656,6 +2661,7 @@ function initStatsCountup() {
         el.textContent = Math.floor(cur) + suffix;
         if (cur >= target) clearInterval(timer);
       }, step);
+      window._statTimers.push(timer);
     });
   };
   const sio = new IntersectionObserver(([entry]) => {
