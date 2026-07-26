@@ -556,8 +556,10 @@ footer span { color: var(--blue); }
   padding: 6px 16px; border: none; cursor: pointer; border-radius: var(--radius-pill);
   font-family: var(--font); font-size: 12px; font-weight: 700; transition: all .2s;
 }
-.admin-save-btn { background: #fff; color: var(--blue); }
+.admin-save-btn { background: #fff; color: var(--blue); transition: all .2s; }
 .admin-save-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
+.admin-save-btn.dirty { background: #ff9500; color: #fff; animation: pulse-dirty 1.5s ease-in-out infinite; }
+@keyframes pulse-dirty { 0%,100% { opacity:1; } 50% { opacity:.75; } }
 .admin-exit-btn { background: rgba(255,255,255,0.18); color: #fff; }
 .admin-exit-btn:hover { background: rgba(255,255,255,0.3); }
 
@@ -1675,12 +1677,12 @@ function _syncStatsFromDom() {
 }
 function delStatCard(i) {
   const cur = _syncStatsFromDom(); cur.splice(i, 1);
-  _adminDirty = true; renderStats(cur);
+  markDirty(); renderStats(cur);
 }
 function addStatCard() {
   const cur = _syncStatsFromDom();
   cur.push({ num: '0', suffix: '', label: '새 항목' });
-  _adminDirty = true; renderStats(cur);
+  markDirty(); renderStats(cur);
 }
 
 /* ── 프로젝트 카드 렌더링 ── */
@@ -1754,7 +1756,7 @@ async function loadData() {
 
   if (!document.querySelector('#aboutGrid .acard')) renderAboutCards(FALLBACK_ABOUT);
   if (!cached?.projects && !document.querySelector('.pcard')) renderProjects(FALLBACK_PROJECTS);
-  if (!document.querySelector('#stats .stat-card')) renderStats(FALLBACK_STATS);
+  if (!_statsFromData && !document.querySelector('#stats .stat-card')) renderStats(FALLBACK_STATS);
 }
 
 function applyFeatures(f, tickerText) {
@@ -1850,7 +1852,7 @@ function applySettings(s) {
   if (s.faq_title) set('#faq .section-title', s.faq_title);
   if (s.hero_badges) { try { const bs = JSON.parse(s.hero_badges); document.querySelectorAll('.hero-badge strong').forEach((el, i) => { if (bs[i] !== undefined) el.textContent = bs[i]; }); } catch {} }
   if (s.footer_badges) { try { const bs = JSON.parse(s.footer_badges); document.querySelectorAll('.footer-badge').forEach((el, i) => { if (bs[i] !== undefined) el.textContent = bs[i]; }); } catch {} }
-  if (s.stats_items) { try { renderStats(JSON.parse(s.stats_items)); } catch {} }
+  if (s.stats_items !== undefined) { try { _statsFromData = true; renderStats(JSON.parse(s.stats_items)); } catch {} }
   if (s.faq_items) { try { renderFaq(JSON.parse(s.faq_items)); _faqInited = true; } catch {} }
 }
 
@@ -2005,6 +2007,17 @@ let adminCurrentProjects = [];
 let adminEditingIdx = -1;
 let _adminDirty = false;
 
+function markDirty() {
+  _adminDirty = true;
+  const saveBtn = document.querySelector('#adminBar .admin-save-btn');
+  if (saveBtn) saveBtn.classList.add('dirty');
+}
+function clearDirty() {
+  _adminDirty = false;
+  const saveBtn = document.querySelector('#adminBar .admin-save-btn');
+  if (saveBtn) saveBtn.classList.remove('dirty');
+}
+
 function enterAdminMode() {
   history.replaceState({}, '', location.pathname);
   document.body.classList.add('admin-mode');
@@ -2081,7 +2094,7 @@ function confirmTextEdit() {
       }
     }
   }
-  _adminDirty = true;
+  markDirty();
   closeTextEdit();
 }
 
@@ -2093,7 +2106,7 @@ document.getElementById('textEditInput')?.addEventListener('keydown', e => {
 
 function exitAdmin() {
   if (_adminDirty && !confirm('저장하지 않은 변경사항이 있습니다. 관리자 모드를 종료하시겠습니까?')) return;
-  _adminDirty = false;
+  clearDirty();
   document.body.classList.remove('admin-mode');
   document.getElementById('adminBar').style.display = 'none';
   document.querySelectorAll('[style*="outline"]').forEach(el => {
@@ -2253,7 +2266,7 @@ function adminModalConfirm() {
     }
     if (adminEditingIdx >= 0) adminCurrentProjects[adminEditingIdx] = p;
     else adminCurrentProjects.push(p);
-    _adminDirty = true;
+    markDirty();
     renderProjects(adminCurrentProjects);
     closeAdminModal();
   };
@@ -2611,7 +2624,7 @@ async function adminSave() {
 
   try {
     let sha;
-    const getRes = await fetch(GH_API, { headers });
+    const getRes = await fetch(GH_API, { headers, cache: 'no-store' });
     if (getRes.ok) { sha = (await getRes.json()).sha; }
     else if (getRes.status !== 404) throw new Error(`GET ${getRes.status}`);
 
@@ -2621,9 +2634,10 @@ async function adminSave() {
     const putRes = await fetch(GH_API, { method: 'PUT', headers, body: JSON.stringify(putBody) });
     if (!putRes.ok) { const e = await putRes.json(); throw new Error(e.message || putRes.status); }
 
-    saveCache({ projects: adminCurrentProjects, settings, links: adminCurrentLinks });
-    _adminDirty = false;
+    saveCache({ projects: adminCurrentProjects, settings, links: adminCurrentLinks, features: siteFeatures, ticker: siteTickerText });
+    clearDirty();
     btn.textContent = '저장됨 ✓';
+    btn.classList.remove('dirty');
     setTimeout(() => { btn.textContent = '저장'; btn.disabled = false; }, 2000);
   } catch (e) {
     btn.textContent = `실패: ${e.message}`; btn.disabled = false;
@@ -2706,6 +2720,7 @@ function toggleBookmark(title, btn) {
    Stats Count-up
 ══════════════════════════════════════ */
 let _statsInited = false;
+let _statsFromData = false; // applySettings에서 stats_items를 렌더했으면 true → fallback 방지
 function initStatsCountup() {
   const section = document.getElementById('stats');
   if (!section) return;
@@ -2777,12 +2792,12 @@ function _syncFaqFromDom() {
 }
 function delFaqItem(i) {
   const cur = _syncFaqFromDom(); cur.splice(i, 1);
-  _faqInited = true; _adminDirty = true; renderFaq(cur);
+  _faqInited = true; markDirty(); renderFaq(cur);
 }
 function addFaqItem() {
   const cur = _syncFaqFromDom();
   cur.push({ q: '새 질문', a: '답변을 입력하세요.' });
-  _faqInited = true; _adminDirty = true; renderFaq(cur);
+  _faqInited = true; markDirty(); renderFaq(cur);
 }
 function toggleFaq(btn) {
   btn.closest('.faq-item').classList.toggle('open');
