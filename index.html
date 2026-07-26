@@ -1442,7 +1442,7 @@ function hashPw(str) {
   for (let i = 0; i < str.length; i++) h = (Math.imul(h, 31) + str.charCodeAt(i)) | 0;
   return (h >>> 0).toString(16);
 }
-const ADMIN_HASH = '5188168d';
+const ADMIN_HASH = '7c516bee';
 
 if (new URLSearchParams(location.search).has('edit')) {
   document.getElementById('pwModal').style.display = 'flex';
