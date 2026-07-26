@@ -318,7 +318,7 @@ section { padding: 80px 64px; max-width: 860px; }
 .tag.green { background: var(--green-dim); color: var(--green); }
 
 /* ── Projects ── */
-.proj-list { display: flex; flex-direction: column; gap: 14px; }
+.proj-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 
 /* 스켈레톤 shimmer */
 .skeleton-card {
@@ -343,18 +343,18 @@ html[data-theme="dark"] .skeleton-card::after {
 
 /* 실제 프로젝트 카드 */
 .pcard {
-  position: relative; display: flex; align-items: center; gap: 0;
+  position: relative; display: flex; flex-direction: column; align-items: flex-start;
   background: var(--surface); box-shadow: var(--sh-md);
-  border-radius: var(--radius-lg); padding: 26px 28px; overflow: hidden;
+  border-radius: var(--radius-lg); padding: 24px 24px 18px; overflow: hidden;
   transition: transform .28s var(--spring), box-shadow .28s var(--ease);
   cursor: pointer; color: inherit; border: none; width: 100%; text-align: left;
 }
-.pcard:hover { transform: translateX(6px); box-shadow: var(--sh-lg); }
+.pcard:hover { transform: translateY(-4px); box-shadow: var(--sh-lg); }
 .pcard::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(155deg, rgba(255,255,255,.50) 0%, transparent 42%);
 }
-.pcard-body { flex: 1; min-width: 0; }
+.pcard-body { flex: 1; min-width: 0; width: 100%; }
 .pcard-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
 .pcard-title { font-size: 18px; font-weight: 800; color: var(--ink); margin-bottom: 6px; line-height: 1.3; letter-spacing: -.2px; }
 .pcard-desc  { font-size: 13px; color: var(--ink-3); line-height: 1.7; margin-bottom: 14px; }
@@ -365,11 +365,26 @@ html[data-theme="dark"] .skeleton-card::after {
 }
 .status.live { background: var(--green-dim); color: var(--green); }
 .status.wip  { background: var(--amber-dim); color: var(--amber); }
+.pcard-actions {
+  display: flex; align-items: center; width: 100%;
+  gap: 6px; margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--bg-deep);
+}
+.pcard-act-btn {
+  width: 28px; height: 28px; border: none; cursor: pointer;
+  background: var(--bg-deep); border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-4); transition: color .2s, background .2s; flex-shrink: 0;
+}
+.pcard-act-btn:hover { color: var(--blue); background: var(--blue-dim); }
+.pcard-bm-btn.bookmarked { color: var(--blue); background: var(--blue-dim); }
 .pcard-arrow {
-  flex-shrink: 0; align-self: center; color: var(--ink-4);
+  margin-left: auto; color: var(--ink-4); flex-shrink: 0;
   transition: transform .2s var(--spring), color .2s;
 }
-.pcard:hover .pcard-arrow { transform: translateX(4px); color: var(--blue); }
+.pcard:hover .pcard-arrow { transform: translateX(3px); color: var(--blue); }
+body.hide-bm .pcard-bm-btn { display: none !important; }
+body.hide-qr .pcard-qr-btn { display: none !important; }
 
 /* ── 프로젝트 상세 모달 ── */
 .modal-backdrop {
@@ -504,6 +519,27 @@ footer {
   border-top: 1px solid var(--bg-deep);
 }
 footer span { color: var(--blue); }
+.footer-inner {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; gap: 20px;
+}
+.footer-copy { font-size: 11px; color: var(--ink-4); line-height: 1.8; }
+.footer-right { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+.footer-badges { display: flex; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
+.footer-badge {
+  font-size: 10px; font-weight: 700; padding: 4px 10px;
+  border: 1.5px solid var(--bg-deep); border-radius: var(--radius-pill);
+  color: var(--ink-3); letter-spacing: 0.2px; white-space: nowrap;
+}
+.footer-sitemap { display: flex; gap: 16px; flex-wrap: wrap; justify-content: flex-end; }
+.footer-sitemap a { font-size: 11px; color: var(--ink-4); transition: color .15s; }
+.footer-sitemap a:hover { color: var(--blue); }
+@media (max-width:768px) {
+  footer { padding: 24px 24px; }
+  .footer-inner { flex-direction: column; gap: 14px; }
+  .footer-right { align-items: flex-start; }
+  .footer-sitemap, .footer-badges { justify-content: flex-start; }
+}
 
 /* ══════════════════════════════════════
    Admin Mode
@@ -676,10 +712,13 @@ body.admin-mode .admin-add-about { display: flex; }
 ══════════════════════════════════════ */
 .mobile-nav {
   display: none; position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
-  z-index: 100; background: var(--surface); box-shadow: var(--sh-md);
+  z-index: 100; background: rgba(242,244,248,0.88); box-shadow: var(--sh-md);
   border-radius: var(--radius-pill); padding: 7px 14px;
   align-items: center; gap: 2px; white-space: nowrap;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
 }
+html[data-theme="dark"] .mobile-nav { background: rgba(25,25,30,0.88); }
 .mobile-nav .sb-logo { font-size: 15px; margin-bottom: 0; margin-right: 6px; }
 .mobile-link {
   font-size: 12px; font-weight: 600; color: var(--ink-3);
@@ -718,9 +757,8 @@ body.admin-mode .admin-add-about { display: flex; }
   section     { padding: 60px 24px; }
   .about-grid { grid-template-columns: 1fr; }
   .acard.full { grid-column: 1; }
-  .pcard      { flex-direction: row; }
+  .proj-list  { grid-template-columns: 1fr; }
   .pcard:hover { transform: translateY(-3px); }
-  .pcard-arrow { display: none; }
   .cdui-wrap  { padding: 24px 20px; }
   .mini-cards { flex-direction: column; }
   .contact-card { padding: 36px 24px; }
@@ -847,6 +885,135 @@ body.has-ticker.admin-mode .layout { padding-top: calc(36px + 44px); }
 .cmodal-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
 .cmodal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 @media (max-width:768px) { .cmodal-card { padding: 32px 24px; } }
+
+/* ══════════════════════════════════════
+   Hero 2-Column Layout
+══════════════════════════════════════ */
+.hero-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  align-items: center; gap: 48px; width: 100%;
+}
+.hero-right {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+.hero-avatar {
+  width: 200px; height: 200px; border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--blue) 0%, #7fb3ff 100%);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--sh-blue); position: relative; overflow: hidden;
+}
+.hero-avatar::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(155deg, rgba(255,255,255,0.22) 0%, transparent 60%);
+}
+.hero-initial {
+  font-size: 88px; font-weight: 800; color: rgba(255,255,255,0.88);
+  line-height: 1; letter-spacing: -3px; position: relative;
+}
+.hero-badge-row { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 220px; }
+.hero-badge {
+  font-size: 11px; font-weight: 700; padding: 7px 14px;
+  background: var(--surface); box-shadow: var(--sh-sm);
+  border-radius: var(--radius-pill); color: var(--ink-3);
+  text-align: center; letter-spacing: 0.2px; border: 1px solid var(--bg-deep);
+}
+.hero-badge strong { color: var(--ink-2); }
+@media (max-width:900px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .hero-right { display: none; }
+}
+@media (min-width:769px) and (max-width:1200px) {
+  .hero-avatar { width: 160px; height: 160px; }
+  .hero-initial { font-size: 70px; }
+}
+
+/* ══════════════════════════════════════
+   Stats Count-up
+══════════════════════════════════════ */
+#stats { padding: 40px 64px 0; max-width: 100%; display: none; }
+#stats.active { display: block; }
+.stats-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 16px;
+}
+.stat-card {
+  background: var(--surface); box-shadow: var(--sh-md);
+  border-radius: var(--radius-lg); padding: 30px 20px; text-align: center;
+  position: relative; overflow: hidden;
+  transition: transform .28s var(--spring), box-shadow .28s var(--ease);
+}
+.stat-card:hover { transform: translateY(-4px); box-shadow: var(--sh-lg); }
+.stat-card::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(155deg, rgba(255,255,255,.50) 0%, transparent 42%);
+}
+html[data-theme="dark"] .stat-card::after { opacity: 0; }
+.stat-num {
+  font-size: clamp(36px,4vw,52px); font-weight: 800; color: var(--blue);
+  line-height: 1; margin-bottom: 8px; letter-spacing: -1px;
+}
+.stat-label { font-size: 12px; color: var(--ink-3); font-weight: 600; letter-spacing: 0.2px; }
+@media (max-width:768px) {
+  #stats { padding: 32px 24px 0; }
+  .stats-grid { gap: 10px; }
+  .stat-num { font-size: 30px; }
+}
+
+/* ══════════════════════════════════════
+   FAQ Accordion
+══════════════════════════════════════ */
+#faq { display: none; }
+#faq.active { display: block; }
+.faq-list { display: flex; flex-direction: column; gap: 10px; }
+.faq-item {
+  background: var(--surface); box-shadow: var(--sh-sm);
+  border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow .2s;
+}
+.faq-item:hover { box-shadow: var(--sh-md); }
+.faq-q {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px; cursor: pointer; font-weight: 700; font-size: 14px; gap: 16px;
+  background: none; border: none; width: 100%; text-align: left;
+  font-family: var(--font); color: var(--ink); transition: background .2s;
+}
+.faq-q:hover { background: var(--bg-deep); }
+.faq-icon { width: 18px; height: 18px; flex-shrink: 0; color: var(--blue); transition: transform .3s var(--ease); }
+.faq-item.open .faq-icon { transform: rotate(45deg); }
+.faq-a {
+  font-size: 13px; color: var(--ink-3); line-height: 1.8;
+  padding: 0 24px; max-height: 0; overflow: hidden;
+  transition: max-height .35s var(--ease), padding .35s var(--ease);
+}
+.faq-item.open .faq-a { padding: 0 24px 18px; max-height: 400px; }
+
+/* ══════════════════════════════════════
+   QR Modal
+══════════════════════════════════════ */
+#qrModal {
+  position: fixed; inset: 0; z-index: 5000;
+  background: rgba(10,12,20,0.55); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; pointer-events: none; transition: opacity .25s var(--ease);
+}
+#qrModal.open { opacity: 1; pointer-events: all; }
+.qr-card {
+  background: var(--surface); border-radius: var(--radius-xl);
+  padding: 36px 40px; max-width: 300px; width: 100%;
+  box-shadow: var(--sh-lg); text-align: center; position: relative;
+  transform: translateY(24px) scale(0.97);
+  transition: transform .3s var(--spring);
+}
+#qrModal.open .qr-card { transform: none; }
+.qr-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 30px; height: 30px; border: none; cursor: pointer;
+  background: var(--bg-deep); box-shadow: var(--sh-pressed);
+  border-radius: var(--radius-pill); color: var(--ink-3);
+  display: flex; align-items: center; justify-content: center; transition: all .2s;
+}
+.qr-close:hover { color: var(--ink); }
+.qr-title { font-size: 15px; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.2px; }
+.qr-img { width: 180px; height: 180px; border-radius: var(--radius); display: block; margin: 0 auto 14px; background: var(--bg-deep); }
+.qr-url { font-size: 11px; color: var(--ink-4); word-break: break-all; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -967,6 +1134,18 @@ body.has-ticker.admin-mode .layout { padding-top: calc(36px + 44px); }
   </div>
 </div>
 
+<!-- QR 모달 -->
+<div id="qrModal">
+  <div class="qr-card">
+    <button class="qr-close" onclick="closeQrModal()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="qr-title" id="qrModalTitle">QR 코드</div>
+    <img class="qr-img" id="qrModalImg" src="" alt="QR 코드" loading="lazy">
+    <div class="qr-url" id="qrModalUrl"></div>
+  </div>
+</div>
+
 <!-- Admin Bar -->
 <div id="adminBar">
   <span class="admin-bar-title">✏️ 편집 모드</span>
@@ -1072,6 +1251,7 @@ body.has-ticker.admin-mode .layout { padding-top: calc(36px + 44px); }
   <a href="#career"   class="mobile-link">소개</a>
   <a href="#projects" class="mobile-link">프로젝트</a>
   <a href="#notes"    class="mobile-link">기록</a>
+  <a href="#faq"      class="mobile-link" id="mbFaqLink" style="display:none">FAQ</a>
   <a href="#contact"  class="mobile-link">연락</a>
   <button class="mobile-theme" id="mobileThemeBtn">
     <svg id="mThemeIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -1115,6 +1295,9 @@ body.has-ticker.admin-mode .layout { padding-top: calc(36px + 44px); }
       <a href="#notes" class="sb-link" data-section="notes">
         <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span class="sb-text">기록</span>
       </a>
+      <a href="#faq" class="sb-link" data-section="faq" id="sbFaqLink" style="display:none">
+        <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span class="sb-text">FAQ</span>
+      </a>
       <a href="#contact"  class="sb-link" data-section="contact">
         <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span class="sb-text">연락</span>
       </a>
@@ -1137,26 +1320,57 @@ body.has-ticker.admin-mode .layout { padding-top: calc(36px + 44px); }
 
     <!-- Hero -->
     <section id="hero">
-      <div class="hero-greeting">Portfolio</div>
-      <h1 class="hero-title">
-        <span class="hero-line-1">더 나은</span><br>
-        <em>교육 현장을</em><br>
-        <span class="line-accent">바라 보기 위해.</span>
-      </h1>
-      <p class="hero-desc" id="heroDesc">
-        고등학교 교사로 근무하며<br>
-        교육 현장에 필요한 도구를 직접 설계하고 개발합니다.
-      </p>
-      <div class="hero-actions">
-        <a href="#projects" class="btn btn-primary">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          프로젝트 보기
-        </a>
-        <a href="#contact" class="btn btn-ghost">연락하기</a>
+      <div class="hero-grid">
+        <div class="hero-left">
+          <div class="hero-greeting">Portfolio</div>
+          <h1 class="hero-title">
+            <span class="hero-line-1">더 나은</span><br>
+            <em>교육 현장을</em><br>
+            <span class="line-accent">바라 보기 위해.</span>
+          </h1>
+          <p class="hero-desc" id="heroDesc">
+            고등학교 교사로 근무하며<br>
+            교육 현장에 필요한 도구를 직접 설계하고 개발합니다.
+          </p>
+          <div class="hero-actions">
+            <a href="#projects" class="btn btn-primary">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              프로젝트 보기
+            </a>
+            <a href="#contact" class="btn btn-ghost">연락하기</a>
+          </div>
+        </div>
+        <div class="hero-right">
+          <div class="hero-avatar">
+            <span class="hero-initial">K</span>
+          </div>
+          <div class="hero-badge-row">
+            <div class="hero-badge"><strong>Google Certified Trainer</strong></div>
+            <div class="hero-badge"><strong>AI 활용 선도교사</strong></div>
+          </div>
+        </div>
       </div>
       <div class="scroll-hint">
         <div class="scroll-line"></div>
         <span>스크롤</span>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section id="stats">
+      <div class="stats-grid">
+        <div class="stat-card reveal">
+          <div class="stat-num" data-target="3" data-suffix="+">3+</div>
+          <div class="stat-label">년간 교직 경험</div>
+        </div>
+        <div class="stat-card reveal" style="transition-delay:.07s">
+          <div class="stat-num" data-target="5" data-suffix="+">5+</div>
+          <div class="stat-label">개발된 도구</div>
+        </div>
+        <div class="stat-card reveal" style="transition-delay:.14s">
+          <div class="stat-num" data-target="2" data-suffix="개">2개</div>
+          <div class="stat-label">구글 공인 자격</div>
+        </div>
       </div>
     </section>
 
@@ -1245,6 +1459,13 @@ body.has-ticker.admin-mode .layout { padding-top: calc(36px + 44px); }
       <button class="admin-add-btn" id="noteAddBtn" onclick="addNote()">+ 기록 추가</button>
     </section>
 
+    <!-- FAQ -->
+    <section id="faq">
+      <div class="section-label">FAQ</div>
+      <h2 class="section-title">자주 묻는 질문</h2>
+      <div class="faq-list" id="faqList"></div>
+    </section>
+
     <!-- Contact -->
     <section id="contact">
       <div class="section-label">Contact</div>
@@ -1265,7 +1486,26 @@ body.has-ticker.admin-mode .layout { padding-top: calc(36px + 44px); }
     </section>
 
     <footer>
-      KMJ &nbsp;·&nbsp; High School Teacher
+      <div class="footer-inner">
+        <div class="footer-copy">
+          <span>KMJ</span> &nbsp;·&nbsp; 고등학교 국어 교사<br>
+          © 2025 kmj.kr
+        </div>
+        <div class="footer-right">
+          <div class="footer-badges">
+            <span class="footer-badge">Google Certified Trainer</span>
+            <span class="footer-badge">Google Certified Educator</span>
+            <span class="footer-badge">AI 활용 선도교사</span>
+          </div>
+          <nav class="footer-sitemap">
+            <a href="#hero">홈</a>
+            <a href="#about">프로필</a>
+            <a href="#projects">프로젝트</a>
+            <a href="#notes">기록</a>
+            <a href="#contact">연락</a>
+          </nav>
+        </div>
+      </div>
     </footer>
 
   </main>
@@ -1384,30 +1624,6 @@ const FALLBACK_PROJECTS = [
 
 /* ── 프로젝트 카드 렌더링 ── */
 function normTags(t) { return Array.isArray(t) ? t : (t ? String(t).split(',').map(s=>s.trim()).filter(Boolean) : []); }
-function renderProjects(projects) {
-  const list = document.getElementById('projList');
-  list.innerHTML = '';
-  projects.forEach((p, i) => {
-    const card = document.createElement('button');
-    card.className = 'pcard reveal';
-    card.style.transitionDelay = (i * 0.08) + 's';
-    card.innerHTML = `
-      <div class="pcard-body">
-        <div class="pcard-meta"><span class="status ${p.status}">${p.statusLabel}</span></div>
-        <div class="pcard-title">${p.title}</div>
-        <div class="pcard-desc">${p.desc}</div>
-        <div class="pcard-tags">${normTags(p.tags).map(t => `<span class="tag blue">${t}</span>`).join('')}</div>
-      </div>
-      <div class="pcard-arrow">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>`;
-    card.addEventListener('click', () => openModal(p));
-    list.appendChild(card);
-    // reveal 적용
-    requestAnimationFrame(() => io.observe(card));
-  });
-}
-
 /* ── Sheets CMS 로드 ── */
 const CACHE_KEY = 'kmj_cache_v1';
 
@@ -1440,7 +1656,7 @@ function saveCache(data) {
   try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
 }
 
-let siteFeatures = { showTicker: true, showContactModal: true, enableSearchFilter: true, enableSkeletonUI: true };
+let siteFeatures = { showTicker: true, showContactModal: true, enableSearchFilter: true, enableSkeletonUI: true, showStats: true, enableQRCode: true, enableBookmark: true, showFAQ: true };
 let siteTickerText = '';
 
 async function loadData() {
@@ -1485,7 +1701,6 @@ function applyFeatures(f, tickerText) {
   } else {
     destroyTicker();
   }
-  const modal = document.getElementById('contactModal');
   const modalBtn = document.getElementById('contactModalBtn');
   if (modalBtn) modalBtn.style.display = f.showContactModal ? '' : 'none';
   const wrap = document.getElementById('projSearchWrap');
@@ -1493,6 +1708,42 @@ function applyFeatures(f, tickerText) {
   if (!f.enableSkeletonUI) {
     document.querySelectorAll('.skeleton-card').forEach(el => el.style.display = 'none');
   }
+
+  // Stats
+  const statsSection = document.getElementById('stats');
+  if (statsSection) {
+    if (f.showStats) {
+      if (!statsSection.classList.contains('active')) {
+        statsSection.classList.add('active');
+        if (!_statsInited) { _statsInited = true; initStatsCountup(); }
+      }
+    } else {
+      statsSection.classList.remove('active');
+    }
+  }
+
+  // FAQ
+  const faqSection = document.getElementById('faq');
+  if (faqSection) {
+    if (f.showFAQ) {
+      if (!faqSection.classList.contains('active')) {
+        faqSection.classList.add('active');
+        if (!_faqInited) { _faqInited = true; renderFaq(FALLBACK_FAQ); }
+      }
+    } else {
+      faqSection.classList.remove('active');
+    }
+  }
+
+  // FAQ + 사이드바/모바일 nav 링크
+  const sbFaq = document.getElementById('sbFaqLink');
+  const mbFaq = document.getElementById('mbFaqLink');
+  if (sbFaq) sbFaq.style.display = f.showFAQ ? '' : 'none';
+  if (mbFaq) mbFaq.style.display = f.showFAQ ? '' : 'none';
+
+  // QR / Bookmark 버튼 표시
+  document.body.classList.toggle('hide-qr', !f.enableQRCode);
+  document.body.classList.toggle('hide-bm', !f.enableBookmark);
 }
 
 function initTicker(text) {
@@ -1617,7 +1868,7 @@ const io = new IntersectionObserver(entries => {
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
 /* ── 스크롤 진행 인디케이터 + 활성 nav ── */
-const sectionIds = ['hero','about','career','projects','notes','contact'];
+const sectionIds = ['hero','stats','about','career','projects','notes','faq','contact'];
 const sbLinks    = document.querySelectorAll('.sb-link');
 const mbLinks    = document.querySelectorAll('.mobile-link');
 const fill       = document.getElementById('progressFill');
@@ -1632,7 +1883,7 @@ window.addEventListener('scroll', () => {
   let cur = 'hero';
   sectionIds.forEach(id => {
     const el = document.getElementById(id);
-    if (el && el.getBoundingClientRect().top <= 180) cur = id;
+    if (el && el.offsetHeight > 0 && el.getBoundingClientRect().top <= 180) cur = id;
   });
   sbLinks.forEach(l => l.classList.toggle('active', l.dataset.section === cur));
   mbLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + cur));
@@ -1773,14 +2024,20 @@ function renderProjects(projects) {
   adminCurrentProjects = JSON.parse(JSON.stringify(projects));
   const list = document.getElementById('projList');
   list.innerHTML = '';
+  const bms = getBookmarks();
   projects.forEach((p, i) => {
     const card = document.createElement('button');
     card.className = 'pcard reveal';
-    card.style.transitionDelay = (i * 0.08) + 's';
+    card.style.transitionDelay = (i * 0.07) + 's';
     card.dataset.idx = i;
     card.dataset.title = p.title;
     card.dataset.tags = normTags(p.tags).join(',');
-    const extIcon = p.link ? `<svg class="pcard-ext-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>` : '';
+    const isBm = bms.includes(p.title);
+    const safeTitle = p.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const qrBtn = p.link
+      ? `<button class="pcard-act-btn pcard-qr-btn" onclick="event.stopPropagation();openQrModal('${safeTitle}','${p.link}')" title="QR 코드">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="4" height="4" rx="1"/></svg>
+        </button>` : '';
     card.innerHTML = `
       <div class="pcard-admin">
         <button class="pcard-admin-btn pcard-edit-btn" onclick="adminEditProject(event,${i})">✏️</button>
@@ -1792,11 +2049,16 @@ function renderProjects(projects) {
         <div class="pcard-desc">${p.desc}</div>
         <div class="pcard-tags">${normTags(p.tags).map(t=>`<span class="tag blue">${t}</span>`).join('')}</div>
       </div>
-      ${extIcon}
-      <div class="pcard-arrow">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      <div class="pcard-actions">
+        ${qrBtn}
+        <button class="pcard-act-btn pcard-bm-btn${isBm ? ' bookmarked' : ''}" id="bm-${i}" onclick="event.stopPropagation();toggleBookmark('${safeTitle}',this)" title="${isBm ? '북마크 해제' : '북마크'}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="${isBm ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+        </button>
+        <div class="pcard-arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
       </div>`;
-    card.addEventListener('click', e => { if (!e.target.closest('.pcard-admin')) openModal(p); });
+    card.addEventListener('click', e => { if (!e.target.closest('.pcard-admin') && !e.target.closest('.pcard-act-btn')) openModal(p); });
     list.appendChild(card);
     requestAnimationFrame(() => io.observe(card));
   });
@@ -2308,6 +2570,107 @@ function toggleSidebar() {
 })();
 
 let adminCurrentLinks = [];
+
+/* ══════════════════════════════════════
+   QR 코드 모달
+══════════════════════════════════════ */
+function openQrModal(title, url) {
+  document.getElementById('qrModalTitle').textContent = title;
+  document.getElementById('qrModalImg').src =
+    'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+  document.getElementById('qrModalUrl').textContent = url;
+  document.getElementById('qrModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeQrModal() {
+  document.getElementById('qrModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('qrModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeQrModal();
+});
+
+/* ══════════════════════════════════════
+   북마크
+══════════════════════════════════════ */
+const BM_KEY = 'kmjkr_bookmarks';
+function getBookmarks() {
+  try { return JSON.parse(localStorage.getItem(BM_KEY)) || []; } catch { return []; }
+}
+function setBookmarks(arr) {
+  try { localStorage.setItem(BM_KEY, JSON.stringify(arr)); } catch {}
+}
+function toggleBookmark(title, btn) {
+  const bms = getBookmarks();
+  const idx = bms.indexOf(title);
+  const nowBm = idx < 0;
+  if (nowBm) bms.push(title); else bms.splice(idx, 1);
+  setBookmarks(bms);
+  btn.classList.toggle('bookmarked', nowBm);
+  btn.title = nowBm ? '북마크 해제' : '북마크';
+  const svg = btn.querySelector('svg');
+  if (svg) svg.setAttribute('fill', nowBm ? 'currentColor' : 'none');
+}
+
+/* ══════════════════════════════════════
+   Stats Count-up
+══════════════════════════════════════ */
+let _statsInited = false;
+function initStatsCountup() {
+  const section = document.getElementById('stats');
+  if (!section) return;
+  const startCountup = () => {
+    section.querySelectorAll('.stat-num').forEach(el => {
+      const target = parseInt(el.dataset.target || '0');
+      const suffix = el.dataset.suffix || '';
+      el.textContent = '0' + suffix;
+      let cur = 0;
+      const dur = 1400, step = 16;
+      const inc = target / (dur / step);
+      const timer = setInterval(() => {
+        cur = Math.min(cur + inc, target);
+        el.textContent = Math.floor(cur) + suffix;
+        if (cur >= target) clearInterval(timer);
+      }, step);
+    });
+  };
+  const sio = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) { startCountup(); sio.disconnect(); }
+  }, { threshold: 0.3 });
+  sio.observe(section);
+}
+
+/* ══════════════════════════════════════
+   FAQ 아코디언
+══════════════════════════════════════ */
+let _faqInited = false;
+const FALLBACK_FAQ = [
+  { q: '도구를 어떻게 사용할 수 있나요?', a: '링크가 있는 도구는 카드를 클릭하면 바로 이동합니다. 일부 도구는 개발 중이거나 교내 전용이라 링크가 없을 수 있어요.' },
+  { q: '학교 현장 외에도 활용 가능한가요?', a: 'GAS 기반 도구는 Google Workspace 환경이면 어디서나 배포 가능합니다. 도입 문의는 연락 섹션을 이용해 주세요.' },
+  { q: 'Google Certified Trainer란 어떤 자격인가요?', a: 'Google이 공식 인증하는 에듀케이터 트레이너 자격으로, Google Workspace for Education 도구를 교사·학생에게 효과적으로 가르칠 수 있음을 인증합니다.' },
+  { q: '도구 개발 협업이나 문의는 어떻게 하나요?', a: '연락 섹션의 \'문의하기\' 버튼을 클릭하거나 이메일로 직접 연락 주세요. 교육 현장에서 필요한 도구라면 함께 만들어 볼 수 있습니다.' },
+];
+function renderFaq(items) {
+  const list = document.getElementById('faqList');
+  if (!list) return;
+  list.innerHTML = '';
+  items.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className = 'faq-item reveal';
+    el.style.transitionDelay = (i * 0.07) + 's';
+    el.innerHTML = `
+      <button class="faq-q" onclick="toggleFaq(this)">
+        <span>${item.q}</span>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <div class="faq-a">${item.a}</div>`;
+    list.appendChild(el);
+    requestAnimationFrame(() => io.observe(el));
+  });
+}
+function toggleFaq(btn) {
+  btn.closest('.faq-item').classList.toggle('open');
+}
 
 /* ── 초기 로드 ── */
 loadData();

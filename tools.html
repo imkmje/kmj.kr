@@ -336,6 +336,46 @@ body {
         <span class="toggle-track"></span>
       </label>
     </div>
+    <div class="flag-row">
+      <div class="flag-info">
+        <div class="flag-label">통계 섹션</div>
+        <div class="flag-desc">주요 수치 카운트업 섹션 표시</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="flag-showStats" checked onchange="onFlagChange()">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+    <div class="flag-row">
+      <div class="flag-info">
+        <div class="flag-label">QR 코드 버튼</div>
+        <div class="flag-desc">프로젝트 카드의 QR 공유 버튼</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="flag-enableQRCode" checked onchange="onFlagChange()">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+    <div class="flag-row">
+      <div class="flag-info">
+        <div class="flag-label">북마크 기능</div>
+        <div class="flag-desc">프로젝트 카드 즐겨찾기 저장</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="flag-enableBookmark" checked onchange="onFlagChange()">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+    <div class="flag-row">
+      <div class="flag-info">
+        <div class="flag-label">FAQ 섹션</div>
+        <div class="flag-desc">자주 묻는 질문 아코디언 표시</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="flag-showFAQ" checked onchange="onFlagChange()">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
     <div class="flags-ticker-field">
       <div class="flags-ticker-label">티커 텍스트</div>
       <input type="text" id="flags-ticker-text" class="flags-ticker-input" placeholder="배너에 표시할 공지 내용">
@@ -542,7 +582,7 @@ document.getElementById('lf-url').addEventListener('keydown', e => {
 
 /* ── feature flags ── */
 let _flagsDirty = false;
-const FLAG_IDS = ['showTicker', 'showContactModal', 'enableSearchFilter', 'enableSkeletonUI'];
+const FLAG_IDS = ['showTicker', 'showContactModal', 'enableSearchFilter', 'enableSkeletonUI', 'showStats', 'enableQRCode', 'enableBookmark', 'showFAQ'];
 
 function onFlagChange() { _flagsDirty = true; }
 
@@ -645,14 +685,14 @@ async function loadLinks() {
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
     links = data.links || [];
-    const defaultFlags = { showTicker: true, showContactModal: true, enableSearchFilter: true, enableSkeletonUI: true };
+    const defaultFlags = { showTicker: true, showContactModal: true, enableSearchFilter: true, enableSkeletonUI: true, showStats: true, enableQRCode: true, enableBookmark: true, showFAQ: true };
     applyFlagsUI(data.features || defaultFlags, data.ticker || '');
     loaded = true;
   } catch (e) {
     links = [];
     const cached = getSiteCache();
     if (cached?.features || cached?.ticker != null) {
-      const defaultFlags = { showTicker: true, showContactModal: true, enableSearchFilter: true, enableSkeletonUI: true };
+      const defaultFlags = { showTicker: true, showContactModal: true, enableSearchFilter: true, enableSkeletonUI: true, showStats: true, enableQRCode: true, enableBookmark: true, showFAQ: true };
       applyFlagsUI(cached.features || defaultFlags, cached.ticker || '');
       links = cached.links || [];
       document.getElementById('linksHint').textContent = '캐시에서 불러옴';
