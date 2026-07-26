@@ -1,4 +1,21 @@
 {
+  "settings": {
+    "hero_line1": "더 나은",
+    "hero_em": "교육 현장을",
+    "hero_accent": "바라 보기 위해.",
+    "hero_desc": "고등학교 현장에서 더 나은 교육 환경을 위해 고민합니다.",
+    "tagline": "국어 교사",
+    "about_title": "교육과 기술의 결합을 추구",
+    "career_title": "소개",
+    "projects_title": "직접 만든 도구들",
+    "notes_title": "기록",
+    "contact_title": "같이 만들어요",
+    "contact_sub": "교육 현장에서 쓸 수 있는 도구, 함께 고민하고 싶은 아이디어가 있다면 편하게 연락 주세요.",
+    "contact_email": "kmj@kmj.kr",
+    "career": "[{\"year\":\"2026\",\"title\":\"인공지능 활용 선도교사 연수 대상자\"},{\"year\":\"2026\",\"title\":\"Google Certified Trainer 취득\"},{\"year\":\"2023~\",\"title\":\"고등학교 국어 교사\"}]",
+    "about": "[{\"icon\":\"teacher\",\"title\":\"교육자\",\"desc\":\"고등학교에서 국어를 가르치고 있습니다. 또, 학년부 업무를 하며 아이들을 관리합니다. 어떻게 하면 효율적으로 가르치고 업무처리를 할까 고민하는 데 많은 시간을 할애합니다.\",\"tags\":[{\"text\":\"생활지도\",\"color\":\"green\"},{\"text\":\"자율학습관리\",\"color\":\"green\"},{\"text\":\"국어\",\"color\":\"green\"}]},{\"icon\":\"developer\",\"title\":\"개발자\",\"desc\":\"코드 한 줄 읽을 줄 몰라요.\",\"tags\":[{\"text\":\"GAS\",\"color\":\"blue\"},{\"text\":\"HTML/CSS/JS\",\"color\":\"blue\"}]}]",
+    "notes": "[{\"date\":\"2026-05-12\",\"category\":\"수업\",\"title\":\"수업 한 줄 1\",\"body\":\"체납이 돈 냈다는 거 아니에요?\"}]"
+  },
   "projects": [
     {
       "title": "자율학습 출석부",
@@ -60,22 +77,5 @@
       "tags": [],
       "link": ""
     }
-  ],
-  "settings": {
-    "hero_line1": "더 나은",
-    "hero_em": "교육 현장을",
-    "hero_accent": "바라 보기 위해.",
-    "hero_desc": "고등학교 현장에서 더 나은 교육 환경을 위해 고민합니다.",
-    "tagline": "국어 교사",
-    "about_title": "교육과 기술의 결합을 추구",
-    "career_title": "소개",
-    "projects_title": "직접 만든 도구들",
-    "notes_title": "기록",
-    "contact_title": "같이 만들어요",
-    "contact_sub": "교육 현장에서 쓸 수 있는 도구, 함께 고민하고 싶은 아이디어가 있다면 편하게 연락 주세요.",
-    "contact_email": "kmj@kmj.kr",
-    "career": "[{\"year\":\"2026\",\"title\":\"인공지능 활용 선도교사 연수 대상자\"},{\"year\":\"2026\",\"title\":\"Google Certified Trainer 취득\"},{\"year\":\"2023~\",\"title\":\"고등학교 국어 교사\"}]",
-    "about": "[{\"icon\":\"teacher\",\"title\":\"교육자\",\"desc\":\"고등학교에서 국어를 가르치고 있습니다. 또, 학년부 업무를 하며 아이들을 관리합니다. 어떻게 하면 효율적으로 가르치고 업무처리를 할까 고민하는 데 많은 시간을 할애합니다.\",\"tags\":[{\"text\":\"생활지도\",\"color\":\"green\"},{\"text\":\"자율학습관리\",\"color\":\"green\"},{\"text\":\"국어\",\"color\":\"green\"}]},{\"icon\":\"developer\",\"title\":\"개발자\",\"desc\":\"코드 한 줄 읽을 줄 몰라요.\",\"tags\":[{\"text\":\"GAS\",\"color\":\"blue\"},{\"text\":\"HTML/CSS/JS\",\"color\":\"blue\"}]}]",
-    "notes": "[{\"date\":\"2026-05-12\",\"category\":\"수업\",\"title\":\"수업 한 줄 1\",\"body\":\"체납이 돈 냈다는 거 아니에요?\"}]"
-  }
+  ]
 }
