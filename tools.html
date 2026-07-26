@@ -302,7 +302,7 @@ body {
         <div class="flag-desc">상단 공지 배너 스크롤 표시</div>
       </div>
       <label class="toggle-wrap">
-        <input type="checkbox" id="flag-showTicker" onchange="onFlagChange()">
+        <input type="checkbox" id="flag-showTicker" checked onchange="onFlagChange()">
         <span class="toggle-track"></span>
       </label>
     </div>
@@ -312,7 +312,7 @@ body {
         <div class="flag-desc">연락 섹션의 문의 모달 버튼</div>
       </div>
       <label class="toggle-wrap">
-        <input type="checkbox" id="flag-showContactModal" onchange="onFlagChange()">
+        <input type="checkbox" id="flag-showContactModal" checked onchange="onFlagChange()">
         <span class="toggle-track"></span>
       </label>
     </div>
@@ -322,7 +322,7 @@ body {
         <div class="flag-desc">Projects 섹션 검색·태그 필터</div>
       </div>
       <label class="toggle-wrap">
-        <input type="checkbox" id="flag-enableSearchFilter" onchange="onFlagChange()">
+        <input type="checkbox" id="flag-enableSearchFilter" checked onchange="onFlagChange()">
         <span class="toggle-track"></span>
       </label>
     </div>
@@ -332,7 +332,7 @@ body {
         <div class="flag-desc">데이터 로딩 전 플레이스홀더 표시</div>
       </div>
       <label class="toggle-wrap">
-        <input type="checkbox" id="flag-enableSkeletonUI" onchange="onFlagChange()">
+        <input type="checkbox" id="flag-enableSkeletonUI" checked onchange="onFlagChange()">
         <span class="toggle-track"></span>
       </label>
     </div>
@@ -570,7 +570,7 @@ async function saveFlags() {
     const el = document.getElementById('flag-' + id);
     if (el) features[id] = el.checked;
   });
-  const tickerText = document.getElementById('flags-ticker-text')?.value.trim() || '';
+  const tickerInputVal = document.getElementById('flags-ticker-text')?.value.trim();
 
   const headers = {
     Authorization: `token ${token}`,
@@ -586,6 +586,13 @@ async function saveFlags() {
       existing = JSON.parse(decodeURIComponent(escape(atob(meta.content.replace(/\n/g, '')))));
     } else if (getRes.status !== 404) throw new Error(`GET ${getRes.status}`);
 
+    // 텍스트 필드가 비어 있으면 기존 값 보존
+    const tickerText = tickerInputVal || existing.ticker || '';
+    if (!tickerInputVal && existing.ticker) {
+      const el = document.getElementById('flags-ticker-text');
+      if (el) el.value = existing.ticker;
+    }
+
     const merged = { ...existing, features, ticker: tickerText };
     const payload = JSON.stringify(merged, null, 2);
     const putBody = { message: 'Update feature flags', branch: GH_BRANCH, content: btoa(unescape(encodeURIComponent(payload))) };
@@ -593,6 +600,9 @@ async function saveFlags() {
 
     const putRes = await fetch(GH_API, { method: 'PUT', headers, body: JSON.stringify(putBody) });
     if (!putRes.ok) { const e = await putRes.json(); throw new Error(e.message || putRes.status); }
+
+    // localStorage 캐시 즉시 업데이트 — index.html 새로고침 시 바로 반영
+    setSiteCache({ features, ticker: tickerText });
 
     btn.textContent = '저장됨 ✓'; _flagsDirty = false;
     setTimeout(() => { btn.textContent = 'GitHub에 저장'; btn.disabled = false; }, 2000);
@@ -612,21 +622,45 @@ async function loadData() {
   await loadLinks();
 }
 
+const CACHE_KEY = 'kmj_cache_v1';
+function getSiteCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch { return null; } }
+function setSiteCache(patch) {
+  try {
+    const cur = getSiteCache() || {};
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ...cur, ...patch }));
+  } catch {}
+}
+
 async function loadLinks() {
   document.getElementById('linksHint').textContent = '불러오는 중…';
+  let loaded = false;
   try {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(GH_API + '?t=' + Date.now(), {
-      headers: { Accept: 'application/vnd.github.v3.raw' }
+      headers: { Accept: 'application/vnd.github.v3.raw' },
+      signal: controller.signal
     });
+    clearTimeout(tid);
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
     links = data.links || [];
-    applyFlagsUI(data.features || { showTicker: true, showContactModal: true, enableSearchFilter: true, enableSkeletonUI: true }, data.ticker || '');
+    const defaultFlags = { showTicker: true, showContactModal: true, enableSearchFilter: true, enableSkeletonUI: true };
+    applyFlagsUI(data.features || defaultFlags, data.ticker || '');
+    loaded = true;
   } catch (e) {
     links = [];
-    document.getElementById('linksHint').textContent = '불러오기 실패: ' + e.message;
-    document.getElementById('linksHint').style.color = 'var(--red)';
-    setTimeout(() => { document.getElementById('linksHint').textContent = ''; document.getElementById('linksHint').style.color = ''; }, 4000);
+    const cached = getSiteCache();
+    if (cached?.features || cached?.ticker != null) {
+      const defaultFlags = { showTicker: true, showContactModal: true, enableSearchFilter: true, enableSkeletonUI: true };
+      applyFlagsUI(cached.features || defaultFlags, cached.ticker || '');
+      links = cached.links || [];
+      document.getElementById('linksHint').textContent = '캐시에서 불러옴';
+    } else {
+      document.getElementById('linksHint').textContent = '불러오기 실패: ' + e.message;
+      document.getElementById('linksHint').style.color = 'var(--red)';
+    }
+    setTimeout(() => { document.getElementById('linksHint').textContent = ''; document.getElementById('linksHint').style.color = ''; }, 3000);
   }
   renderLinks();
   if (document.getElementById('linksHint').textContent === '불러오는 중…') {
