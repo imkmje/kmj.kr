@@ -381,7 +381,15 @@ html[data-theme="dark"] .skeleton-card::after {
   transition: all .2s; z-index: 1;
 }
 .modal-close:hover { color: var(--ink); transform: scale(1.05); }
-.modal-emoji { font-size: 40px; margin-bottom: 16px; display: block; }
+.admin-file-label {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border: 1.5px solid var(--bg-deep);
+  border-radius: var(--radius); cursor: pointer;
+  font-size: 13px; color: var(--ink-3);
+  background: var(--bg); transition: border-color .15s;
+}
+.admin-file-label:hover { border-color: var(--blue); color: var(--ink); }
+.admin-file-attached { font-size: 11px; color: var(--ink-3); margin-top: 4px; }
 .modal-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.3px; }
 .modal-status { margin-bottom: 16px; }
 .modal-desc { font-size: 14px; color: var(--ink-3); line-height: 1.8; margin-bottom: 20px; }
@@ -821,6 +829,10 @@ body.admin-mode .admin-add-about { display: flex; }
 <div id="adminBar">
   <span class="admin-bar-title">✏️ 편집 모드 — 파란 테두리 영역을 클릭해서 수정하세요</span>
   <button class="admin-bar-btn" style="background:rgba(255,255,255,0.18);color:#fff;font-size:12px;" onclick="adminFillDefaults()">기본 카드 채우기</button>
+  <span id="ghTokenStatus" style="font-size:11px;color:rgba(255,255,255,0.75);white-space:nowrap;"></span>
+  <button class="admin-bar-btn" style="background:rgba(255,255,255,0.18);color:#fff;font-size:12px;" onclick="toggleTokenInput()">🔑 토큰</button>
+  <input type="password" id="ghTokenInput" placeholder="GitHub Personal Access Token" style="display:none;padding:5px 10px;border-radius:var(--radius);border:none;font-size:12px;background:rgba(255,255,255,0.92);color:#333;width:220px;" onkeydown="if(event.key==='Enter')saveToken()">
+  <button id="ghTokenSaveBtn" style="display:none;" class="admin-bar-btn" onclick="saveToken()">확인</button>
   <button class="admin-bar-btn admin-save-btn" onclick="adminSave()">저장</button>
   <button class="admin-bar-btn admin-exit-btn" onclick="exitAdmin()">종료</button>
 </div>
@@ -829,10 +841,6 @@ body.admin-mode .admin-add-about { display: flex; }
 <div id="adminModal">
   <div class="admin-modal-card">
     <div class="admin-modal-title" id="adminModalTitle">프로젝트 편집</div>
-    <div class="admin-field">
-      <div class="admin-label">이모지</div>
-      <input class="admin-input" id="af-emoji" placeholder="📋">
-    </div>
     <div class="admin-field">
       <div class="admin-label">제목</div>
       <input class="admin-input" id="af-title" placeholder="프로젝트 이름">
@@ -860,6 +868,15 @@ body.admin-mode .admin-add-about { display: flex; }
       <div class="admin-label">링크 (없으면 빈칸)</div>
       <input class="admin-input" id="af-link" placeholder="https://...">
     </div>
+    <div class="admin-field">
+      <div class="admin-label">HTML 파일 첨부 (링크 대신 사용)</div>
+      <label class="admin-file-label">
+        <input type="file" id="af-file" accept=".html" style="display:none" onchange="adminFileChange(this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span id="af-file-text">파일 선택...</span>
+      </label>
+      <div class="admin-file-attached" id="af-file-name"></div>
+    </div>
     <div class="admin-modal-actions">
       <button class="admin-bar-btn admin-exit-btn" style="background:var(--bg-deep);color:var(--ink-3)" onclick="closeAdminModal()">취소</button>
       <button class="admin-bar-btn admin-save-btn" style="background:var(--blue);color:#fff" onclick="adminModalConfirm()">확인</button>
@@ -873,7 +890,6 @@ body.admin-mode .admin-add-about { display: flex; }
     <button class="modal-close" id="modalClose">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
-    <span class="modal-emoji" id="modalEmoji"></span>
     <div class="modal-title" id="modalTitle"></div>
     <div class="modal-status" id="modalStatus"></div>
     <div class="modal-desc" id="modalDesc"></div>
@@ -1069,11 +1085,34 @@ body.admin-mode .admin-add-about { display: flex; }
 
 <script>
 /* ══════════════════════════════════════
-   Sheets CMS — 프로젝트 데이터
-   실제 배포 시 GAS_URL을 교체하세요.
-   GAS doGet()이 아래 JSON 구조를 반환해야 합니다.
+   GitHub CMS — data.json
 ══════════════════════════════════════ */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyvYSm3tqUgd9elH5eNNsw-5H6ArG9u6y3aduHHtnUvNsq7D1NN0mqxhZcMxo7jlys/exec';
+const GH_OWNER  = 'imkmje';
+const GH_REPO   = 'kmj.kr';
+const GH_BRANCH = 'main';
+const GH_FILE   = 'data.json';
+const GH_RAW    = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}`;
+const GH_API    = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+
+function getToken() { return localStorage.getItem('kmjkr_gh_token') || ''; }
+function setToken(t) { t ? localStorage.setItem('kmjkr_gh_token', t) : localStorage.removeItem('kmjkr_gh_token'); }
+function toggleTokenInput() {
+  const inp = document.getElementById('ghTokenInput');
+  const btn = document.getElementById('ghTokenSaveBtn');
+  const open = inp.style.display === 'none';
+  inp.style.display = open ? 'inline-block' : 'none';
+  btn.style.display = open ? 'inline-block' : 'none';
+  if (open) { inp.value = getToken(); inp.focus(); inp.select(); }
+}
+function saveToken() {
+  setToken(document.getElementById('ghTokenInput').value.trim());
+  toggleTokenInput();
+  updateTokenStatus();
+}
+function updateTokenStatus() {
+  const el = document.getElementById('ghTokenStatus');
+  if (el) el.textContent = getToken() ? '● 토큰 설정됨' : '○ 토큰 없음';
+}
 
 const FALLBACK_ABOUT = [
   {
@@ -1139,7 +1178,7 @@ function renderAboutCards(cards) {
 // 기본 프로젝트 데이터 (Sheets 미연동·빈 배열일 때 표시)
 const FALLBACK_PROJECTS = [
   {
-    emoji: '📋', title: '자율학습 출석부',
+    title: '자율학습 출석부',
     status: 'live', statusLabel: '운영 중',
     desc: '청백운반 5개 자습반 출석을 실시간 관리. 저장 잠금·세션 관리·결석 현황 리포트·방과후 토글 기능 포함.',
     detail: 'Google Apps Script와 Google Sheets를 백엔드로, 단일 HTML 파일로 구현한 출석 관리 웹앱. 저장 후 자동 잠금, 세션별 출석 기록, 결석 현황 리포트 자동 생성, 방과후 수업 토글을 지원합니다.',
@@ -1147,7 +1186,7 @@ const FALLBACK_PROJECTS = [
     link: ''
   },
   {
-    emoji: '📊', title: '성적 분석 · 상담 도구',
+    title: '성적 분석 · 상담 도구',
     status: 'wip', statusLabel: '개발 중',
     desc: 'NEIS 성적 데이터를 불러와 학생별 성취 추이를 시각화하고 상담 자료를 자동으로 생성합니다.',
     detail: 'NEIS에서 내보낸 CSV를 GAS로 파싱해 Chart.js로 성적 추이를 시각화합니다. 학생별 맞춤 상담 자료를 자동 생성하며, AI 기반 슬라이드 생성 기능도 개발 중입니다.',
@@ -1155,7 +1194,7 @@ const FALLBACK_PROJECTS = [
     link: ''
   },
   {
-    emoji: '🎓', title: '온라인 강좌 수강 신청',
+    title: '온라인 강좌 수강 신청',
     status: 'live', statusLabel: '운영 중',
     desc: '학생 수강 신청·교사 승인·반려 워크플로우 전체를 자동화한 웹앱. 신청 현황을 실시간으로 확인합니다.',
     detail: '학생이 온라인 강좌를 신청하면 담당 교사에게 알림이 전송되고, 승인·반려 처리가 Google Sheets에 실시간 반영됩니다. 신청 마감·정원 초과 처리도 자동화되어 있습니다.',
@@ -1163,7 +1202,7 @@ const FALLBACK_PROJECTS = [
     link: ''
   },
   {
-    emoji: '🎲', title: '발표자 룰렛',
+    title: '발표자 룰렛',
     status: 'live', statusLabel: '운영 중',
     desc: '스프링-댐퍼 물리 시뮬레이션 기반 발표자 추첨 앱. 자연스러운 감속과 바운스 효과가 특징.',
     detail: '스프링-댐퍼 물리 엔진을 직접 구현해 룰렛 포인터의 자연스러운 감속과 바운스를 재현했습니다. 수업 중 발표자 무작위 선택에 활용하며, 학생 이름 목록을 직접 입력할 수 있습니다.',
@@ -1173,6 +1212,7 @@ const FALLBACK_PROJECTS = [
 ];
 
 /* ── 프로젝트 카드 렌더링 ── */
+function normTags(t) { return Array.isArray(t) ? t : (t ? String(t).split(',').map(s=>s.trim()).filter(Boolean) : []); }
 function renderProjects(projects) {
   const list = document.getElementById('projList');
   list.innerHTML = '';
@@ -1185,7 +1225,7 @@ function renderProjects(projects) {
         <div class="pcard-meta"><span class="status ${p.status}">${p.statusLabel}</span></div>
         <div class="pcard-title">${p.title}</div>
         <div class="pcard-desc">${p.desc}</div>
-        <div class="pcard-tags">${p.tags.map(t => `<span class="tag blue">${t}</span>`).join('')}</div>
+        <div class="pcard-tags">${normTags(p.tags).map(t => `<span class="tag blue">${t}</span>`).join('')}</div>
       </div>
       <div class="pcard-arrow">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -1229,38 +1269,27 @@ function saveCache(data) {
   try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
 }
 
-async function loadFromSheets() {
-  // 스켈레톤 항상 먼저 (캐시 있으면 동기적으로 즉시 덮어쓰므로 실제로 안 보임)
+async function loadData() {
   renderAboutSkeleton();
   renderNotes([]);
 
   const cached = getCache();
-
-  // 캐시로 즉시 렌더 (스켈레톤을 동기적으로 덮어씀 → 브라우저 페인트 1회만 발생)
   if (cached?.projects?.length) renderProjects(cached.projects);
   if (cached?.settings) applySettings(cached.settings);
 
-  if (!GAS_URL) {
-    if (!document.querySelector('#aboutGrid .acard')) renderAboutCards(FALLBACK_ABOUT);
-    if (!cached?.projects) renderProjects(FALLBACK_PROJECTS);
-    return;
-  }
-
   try {
-    const res  = await fetch(GAS_URL);
+    const res  = await fetch(GH_RAW + '?t=' + Date.now());
+    if (!res.ok) throw new Error('not found');
     const data = await res.json();
     const fresh = JSON.stringify({ projects: data.projects, settings: data.settings });
     const old   = JSON.stringify({ projects: cached?.projects, settings: cached?.settings });
-
     saveCache({ projects: data.projects || [], settings: data.settings || {} });
-
     if (fresh !== old) {
       if (data.projects?.length) renderProjects(data.projects);
       if (data.settings) applySettings(data.settings);
     }
-  } catch { /* 무시 */ }
+  } catch { /* data.json 없거나 네트워크 오류 → 캐시/fallback 사용 */ }
 
-  // 모든 경우에서 about 카드 미렌더 시 fallback 보장
   if (!document.querySelector('#aboutGrid .acard')) renderAboutCards(FALLBACK_ABOUT);
   if (!cached?.projects && !document.querySelector('.pcard')) renderProjects(FALLBACK_PROJECTS);
 }
@@ -1315,14 +1344,29 @@ function renderCareerItems(items) {
 
 /* ── 모달 ── */
 function openModal(p) {
-  document.getElementById('modalEmoji').textContent  = p.emoji;
   document.getElementById('modalTitle').textContent  = p.title;
   document.getElementById('modalStatus').innerHTML   = `<span class="status ${p.status}">${p.statusLabel}</span>`;
   document.getElementById('modalDesc').textContent   = p.detail || p.desc;
-  document.getElementById('modalTags').innerHTML     = p.tags.map(t => `<span class="tag blue">${t}</span>`).join('');
+  document.getElementById('modalTags').innerHTML     = normTags(p.tags).map(t => `<span class="tag blue">${t}</span>`).join('');
   const link = document.getElementById('modalLink');
-  if (p.link) { link.href = p.link; link.className = 'modal-link'; link.textContent = '앱 열기 →'; }
-  else        { link.href = '#';    link.className = 'modal-link disabled'; link.textContent = '링크 준비 중'; }
+  if (link._blobUrl) { URL.revokeObjectURL(link._blobUrl); link._blobUrl = null; }
+  if (p.hasFile) {
+    const fc = localStorage.getItem('kmjkr_pfile_' + p.title);
+    if (fc) {
+      const blob = new Blob([fc], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      link._blobUrl = url;
+      link.href = url;
+      link.className = 'modal-link';
+      link.textContent = p.title + ' 열기 →';
+    } else {
+      link.href = '#'; link.className = 'modal-link disabled'; link.textContent = '파일 없음 (다른 기기)';
+    }
+  } else if (p.link) {
+    link.href = p.link; link.className = 'modal-link'; link.textContent = '앱 열기 →';
+  } else {
+    link.href = '#'; link.className = 'modal-link disabled'; link.textContent = '링크 준비 중';
+  }
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -1430,6 +1474,7 @@ function enterAdminMode() {
   history.replaceState({}, '', location.pathname);
   document.body.classList.add('admin-mode');
   document.getElementById('adminBar').style.display = 'flex';
+  updateTokenStatus();
 
   const sels = [
     '.hero-line-1', '.hero-title em', '.hero-title .line-accent',
@@ -1527,7 +1572,7 @@ function renderProjects(projects) {
         <div class="pcard-meta"><span class="status ${p.status}">${p.statusLabel}</span></div>
         <div class="pcard-title">${p.title}</div>
         <div class="pcard-desc">${p.desc}</div>
-        <div class="pcard-tags">${p.tags.map(t=>`<span class="tag blue">${t}</span>`).join('')}</div>
+        <div class="pcard-tags">${normTags(p.tags).map(t=>`<span class="tag blue">${t}</span>`).join('')}</div>
       </div>
       <div class="pcard-arrow">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -1541,14 +1586,21 @@ function renderProjects(projects) {
 /* ── 프로젝트 편집 모달 ── */
 function openAdminModal(title, p) {
   document.getElementById('adminModalTitle').textContent = title;
-  document.getElementById('af-emoji').value  = p.emoji || '';
   document.getElementById('af-title').value  = p.title || '';
   document.getElementById('af-status').value = p.status || 'live';
   document.getElementById('af-desc').value   = p.desc || '';
   document.getElementById('af-detail').value = p.detail || '';
-  document.getElementById('af-tags').value   = Array.isArray(p.tags) ? p.tags.join(', ') : (p.tags||'');
+  document.getElementById('af-tags').value   = normTags(p.tags).join(', ');
   document.getElementById('af-link').value   = p.link || '';
+  document.getElementById('af-file').value   = '';
+  document.getElementById('af-file-text').textContent = '파일 선택...';
+  document.getElementById('af-file-name').textContent = p.fileName ? `현재 파일: ${p.fileName}` : '';
   document.getElementById('adminModal').classList.add('open');
+}
+function adminFileChange(input) {
+  const name = input.files[0]?.name || '';
+  document.getElementById('af-file-text').textContent = name || '파일 선택...';
+  document.getElementById('af-file-name').textContent = '';
 }
 function closeAdminModal() {
   document.getElementById('adminModal').classList.remove('open');
@@ -1558,20 +1610,45 @@ document.getElementById('adminModal').addEventListener('click', e => { if (e.tar
 
 function adminModalConfirm() {
   const statusVal = document.getElementById('af-status').value;
-  const p = {
-    emoji: document.getElementById('af-emoji').value || '📌',
-    title: document.getElementById('af-title').value,
-    status: statusVal,
-    statusLabel: statusVal === 'live' ? '운영 중' : '개발 중',
-    desc:   document.getElementById('af-desc').value,
-    detail: document.getElementById('af-detail').value,
-    tags:   document.getElementById('af-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
-    link:   document.getElementById('af-link').value,
+  const existing  = adminEditingIdx >= 0 ? adminCurrentProjects[adminEditingIdx] : null;
+  const fileInput = document.getElementById('af-file');
+
+  const saveProject = (fileInfo) => {
+    const p = {
+      title:       document.getElementById('af-title').value,
+      status:      statusVal,
+      statusLabel: statusVal === 'live' ? '운영 중' : '개발 중',
+      desc:        document.getElementById('af-desc').value,
+      detail:      document.getElementById('af-detail').value,
+      tags:        document.getElementById('af-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+      link:        document.getElementById('af-link').value,
+      hasFile:     fileInfo.hasFile,
+      fileName:    fileInfo.fileName || null,
+    };
+    if (fileInfo.content) {
+      try { localStorage.setItem('kmjkr_pfile_' + p.title, fileInfo.content); } catch {}
+    }
+    if (existing?.hasFile && existing.title !== p.title) {
+      const old = localStorage.getItem('kmjkr_pfile_' + existing.title);
+      if (old) {
+        try { localStorage.setItem('kmjkr_pfile_' + p.title, old); } catch {}
+        localStorage.removeItem('kmjkr_pfile_' + existing.title);
+      }
+    }
+    if (adminEditingIdx >= 0) adminCurrentProjects[adminEditingIdx] = p;
+    else adminCurrentProjects.push(p);
+    renderProjects(adminCurrentProjects);
+    closeAdminModal();
   };
-  if (adminEditingIdx >= 0) adminCurrentProjects[adminEditingIdx] = p;
-  else adminCurrentProjects.push(p);
-  renderProjects(adminCurrentProjects);
-  closeAdminModal();
+
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = e => saveProject({ hasFile: true, fileName: file.name, content: e.target.result });
+    reader.readAsText(file);
+  } else {
+    saveProject({ hasFile: existing?.hasFile || false, fileName: existing?.fileName || null, content: null });
+  }
 }
 
 function adminAddProject()        { adminEditingIdx = -1; openAdminModal('프로젝트 추가', {}); }
@@ -1839,10 +1916,12 @@ function adminFillDefaults() {
 
 /* ── 저장 ── */
 async function adminSave() {
+  const token = getToken();
+  if (!token) { toggleTokenInput(); return; }
+
   const btn = document.querySelector('.admin-save-btn');
   btn.textContent = '저장 중...'; btn.disabled = true;
 
-  // settings 수집
   const contactBtn = document.getElementById('contactBtn');
   const txt = (sel) => document.querySelector(sel)?.textContent.trim() || '';
   const settings = {
@@ -1860,14 +1939,12 @@ async function adminSave() {
     contact_email:   contactBtn.href.replace('mailto:',''),
   };
 
-  // career 수집
   const careerItems = [...document.querySelectorAll('#careerList .career-item')].map(el => ({
     year:  el.querySelector('.career-year')?.textContent.trim()  || '',
     title: el.querySelector('.career-title')?.textContent.trim() || '',
   }));
   settings.career = JSON.stringify(careerItems);
 
-  // about 카드 수집
   const aboutCards = [...document.querySelectorAll('#aboutGrid .acard')].map(card => {
     const iconEl = card.querySelector('.acard-icon');
     const svgCheck = iconEl?.querySelector('svg');
@@ -1882,31 +1959,37 @@ async function adminSave() {
       text:  [...t.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim(),
       color: t.classList.contains('green') ? 'green' : 'blue',
     }));
-    return {
-      icon,
-      title: card.querySelector('h3')?.textContent.trim() || '',
-      desc:  card.querySelector('p')?.textContent.trim()  || '',
-      tags,
-    };
+    return { icon, title: card.querySelector('h3')?.textContent.trim() || '', desc: card.querySelector('p')?.textContent.trim() || '', tags };
   });
   settings.about = JSON.stringify(aboutCards);
   settings.notes = JSON.stringify(adminCurrentNotes);
 
-  const formData = new URLSearchParams();
-  formData.append('data', JSON.stringify({ settings, projects: adminCurrentProjects }));
+  const payload = JSON.stringify({ settings, projects: adminCurrentProjects }, null, 2);
+  const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
 
   try {
-    await fetch(GAS_URL, { method: 'POST', body: formData });
+    let sha;
+    const getRes = await fetch(GH_API, { headers });
+    if (getRes.ok) { sha = (await getRes.json()).sha; }
+    else if (getRes.status !== 404) throw new Error(`GET ${getRes.status}`);
+
+    const putBody = { message: 'Update site data', branch: GH_BRANCH, content: btoa(unescape(encodeURIComponent(payload))) };
+    if (sha) putBody.sha = sha;
+
+    const putRes = await fetch(GH_API, { method: 'PUT', headers, body: JSON.stringify(putBody) });
+    if (!putRes.ok) { const e = await putRes.json(); throw new Error(e.message || putRes.status); }
+
+    saveCache({ projects: adminCurrentProjects, settings });
     btn.textContent = '저장됨 ✓';
     setTimeout(() => { btn.textContent = '저장'; btn.disabled = false; }, 2000);
-  } catch {
-    alert('저장 실패. 네트워크를 확인해 주세요.');
-    btn.textContent = '저장'; btn.disabled = false;
+  } catch (e) {
+    btn.textContent = `실패: ${e.message}`; btn.disabled = false;
+    setTimeout(() => { btn.textContent = '저장'; }, 3000);
   }
 }
 
 /* ── 초기 로드 ── */
-loadFromSheets();
+loadData();
 </script>
 </body>
 </html>
