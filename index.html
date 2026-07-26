@@ -638,6 +638,30 @@ body.admin-mode .acard { position: relative; }
 body.admin-mode .acard-del-btn { display: flex; }
 .acard-del-btn:hover { background: var(--red); color: #fff; }
 
+/* stat card admin */
+body.admin-mode .stat-card { position: relative; }
+.stat-del-btn {
+  display: none; position: absolute; top: 8px; right: 8px;
+  width: 26px; height: 26px; border-radius: 50%;
+  border: none; cursor: pointer; background: var(--bg-deep); color: var(--ink-3);
+  font-size: 11px; align-items: center; justify-content: center;
+  transition: background .15s, color .15s; z-index: 2;
+}
+body.admin-mode .stat-del-btn { display: flex; }
+.stat-del-btn:hover { background: var(--red); color: #fff; }
+
+/* faq item admin */
+body.admin-mode .faq-item { position: relative; }
+.faq-del-btn {
+  display: none; position: absolute; top: 10px; right: 10px;
+  width: 26px; height: 26px; border-radius: 50%;
+  border: none; cursor: pointer; background: var(--bg-deep); color: var(--ink-3);
+  font-size: 11px; align-items: center; justify-content: center;
+  transition: background .15s, color .15s; z-index: 3;
+}
+body.admin-mode .faq-del-btn { display: flex; }
+.faq-del-btn:hover { background: var(--red); color: #fff; }
+
 /* tag controls */
 body.admin-mode .acard .tag { cursor: pointer; }
 body.admin-mode .acard .tag:hover { opacity: .8; }
@@ -1358,20 +1382,8 @@ html[data-theme="dark"] .stat-card::after { opacity: 0; }
 
     <!-- Stats -->
     <section id="stats">
-      <div class="stats-grid">
-        <div class="stat-card reveal">
-          <div class="stat-num" data-target="3" data-suffix="+">3+</div>
-          <div class="stat-label">년간 교직 경험</div>
-        </div>
-        <div class="stat-card reveal" style="transition-delay:.07s">
-          <div class="stat-num" data-target="5" data-suffix="+">5+</div>
-          <div class="stat-label">개발된 도구</div>
-        </div>
-        <div class="stat-card reveal" style="transition-delay:.14s">
-          <div class="stat-num" data-target="2" data-suffix="개">2개</div>
-          <div class="stat-label">구글 공인 자격</div>
-        </div>
-      </div>
+      <div class="stats-grid"></div>
+      <button class="admin-add-btn" onclick="addStatCard()">+ 통계 카드 추가</button>
     </section>
 
     <!-- About -->
@@ -1464,6 +1476,7 @@ html[data-theme="dark"] .stat-card::after { opacity: 0; }
       <div class="section-label">FAQ</div>
       <h2 class="section-title">자주 묻는 질문</h2>
       <div class="faq-list" id="faqList"></div>
+      <button class="admin-add-btn" onclick="addFaqItem()">+ 질문 추가</button>
     </section>
 
     <!-- Contact -->
@@ -1585,6 +1598,14 @@ function renderAboutCards(cards) {
   });
 }
 
+const FALLBACK_STATS = [
+  { num: '3', suffix: '+', label: '년간 교직 경험' },
+  { num: '5', suffix: '+', label: '개발된 도구' },
+  { num: '2', suffix: '개', label: '구글 공인 자격' },
+];
+let adminCurrentStats = [];
+let adminCurrentFaq = [];
+
 // 기본 프로젝트 데이터 (Sheets 미연동·빈 배열일 때 표시)
 const FALLBACK_PROJECTS = [
   {
@@ -1620,6 +1641,47 @@ const FALLBACK_PROJECTS = [
     link: 'https://kmj.kr/presenter.html'
   }
 ];
+
+/* ── Stats 렌더링 ── */
+function renderStats(items) {
+  adminCurrentStats = items.slice();
+  const grid = document.querySelector('#stats .stats-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  items.forEach((item, i) => {
+    const card = document.createElement('div');
+    card.className = 'stat-card reveal';
+    card.style.transitionDelay = (i * 0.07) + 's';
+    card.innerHTML = `
+      <button class="stat-del-btn" onclick="delStatCard(${i})">✕</button>
+      <div class="stat-num" data-target="${item.num}" data-suffix="${item.suffix || ''}">${item.num}${item.suffix || ''}</div>
+      <div class="stat-label">${item.label}</div>`;
+    grid.appendChild(card);
+    requestAnimationFrame(() => {
+      io.observe(card);
+      if (document.body.classList.contains('admin-mode')) {
+        registerEditable(card.querySelector('.stat-num'));
+        registerEditable(card.querySelector('.stat-label'));
+      }
+    });
+  });
+}
+function _syncStatsFromDom() {
+  return [...document.querySelectorAll('#stats .stat-card')].map(c => ({
+    num: c.querySelector('.stat-num')?.getAttribute('data-target') || '0',
+    suffix: c.querySelector('.stat-num')?.getAttribute('data-suffix') || '',
+    label: c.querySelector('.stat-label')?.textContent.trim() || ''
+  }));
+}
+function delStatCard(i) {
+  const cur = _syncStatsFromDom(); cur.splice(i, 1);
+  _adminDirty = true; renderStats(cur);
+}
+function addStatCard() {
+  const cur = _syncStatsFromDom();
+  cur.push({ num: '0', suffix: '', label: '새 항목' });
+  _adminDirty = true; renderStats(cur);
+}
 
 /* ── 프로젝트 카드 렌더링 ── */
 function normTags(t) { return Array.isArray(t) ? t : (t ? String(t).split(',').map(s=>s.trim()).filter(Boolean) : []); }
@@ -1692,6 +1754,7 @@ async function loadData() {
 
   if (!document.querySelector('#aboutGrid .acard')) renderAboutCards(FALLBACK_ABOUT);
   if (!cached?.projects && !document.querySelector('.pcard')) renderProjects(FALLBACK_PROJECTS);
+  if (!document.querySelector('#stats .stat-card')) renderStats(FALLBACK_STATS);
 }
 
 function applyFeatures(f, tickerText) {
@@ -1787,7 +1850,7 @@ function applySettings(s) {
   if (s.faq_title) set('#faq .section-title', s.faq_title);
   if (s.hero_badges) { try { const bs = JSON.parse(s.hero_badges); document.querySelectorAll('.hero-badge strong').forEach((el, i) => { if (bs[i] !== undefined) el.textContent = bs[i]; }); } catch {} }
   if (s.footer_badges) { try { const bs = JSON.parse(s.footer_badges); document.querySelectorAll('.footer-badge').forEach((el, i) => { if (bs[i] !== undefined) el.textContent = bs[i]; }); } catch {} }
-  if (s.stats_items) { try { const items = JSON.parse(s.stats_items); document.querySelectorAll('.stat-card').forEach((card, i) => { if (!items[i]) return; const num = card.querySelector('.stat-num'); const lbl = card.querySelector('.stat-label'); if (num) { num.setAttribute('data-target', items[i].num); num.setAttribute('data-suffix', items[i].suffix || ''); num.textContent = items[i].num + (items[i].suffix || ''); } if (lbl && items[i].label) lbl.textContent = items[i].label; }); } catch {} }
+  if (s.stats_items) { try { renderStats(JSON.parse(s.stats_items)); } catch {} }
   if (s.faq_items) { try { renderFaq(JSON.parse(s.faq_items)); _faqInited = true; } catch {} }
 }
 
@@ -2681,6 +2744,7 @@ const FALLBACK_FAQ = [
   { q: '도구 개발 협업이나 문의는 어떻게 하나요?', a: '연락 섹션의 \'문의하기\' 버튼을 클릭하거나 이메일로 직접 연락 주세요. 교육 현장에서 필요한 도구라면 함께 만들어 볼 수 있습니다.' },
 ];
 function renderFaq(items) {
+  adminCurrentFaq = items.slice();
   const list = document.getElementById('faqList');
   if (!list) return;
   list.innerHTML = '';
@@ -2689,6 +2753,7 @@ function renderFaq(items) {
     el.className = 'faq-item reveal';
     el.style.transitionDelay = (i * 0.07) + 's';
     el.innerHTML = `
+      <button class="faq-del-btn" onclick="delFaqItem(${i})">✕</button>
       <button class="faq-q" onclick="toggleFaq(this)">
         <span>${item.q}</span>
         <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2703,6 +2768,21 @@ function renderFaq(items) {
       }
     });
   });
+}
+function _syncFaqFromDom() {
+  return [...document.querySelectorAll('#faqList .faq-item')].map(item => ({
+    q: item.querySelector('.faq-q span')?.textContent.trim() || '',
+    a: item.querySelector('.faq-a')?.textContent.trim() || ''
+  }));
+}
+function delFaqItem(i) {
+  const cur = _syncFaqFromDom(); cur.splice(i, 1);
+  _faqInited = true; _adminDirty = true; renderFaq(cur);
+}
+function addFaqItem() {
+  const cur = _syncFaqFromDom();
+  cur.push({ q: '새 질문', a: '답변을 입력하세요.' });
+  _faqInited = true; _adminDirty = true; renderFaq(cur);
 }
 function toggleFaq(btn) {
   btn.closest('.faq-item').classList.toggle('open');
