@@ -727,7 +727,126 @@ body.admin-mode .admin-add-about { display: flex; }
   footer      { padding: 24px 24px; }
   .scroll-hint { left: 24px; }
   .modal-card { padding: 32px 24px; }
+  .proj-search-wrap { padding: 0; }
 }
+
+/* ══════════════════════════════════════
+   Ticker Banner
+══════════════════════════════════════ */
+#ticker {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 80;
+  height: 36px; background: var(--blue); color: #fff;
+  overflow: hidden; cursor: default;
+}
+#ticker.visible { display: block; }
+body.has-ticker .sidebar,
+body.has-ticker .mobile-nav { top: 36px; }
+body.has-ticker .layout { padding-top: 36px; }
+body.has-ticker #adminBar { top: 36px; }
+body.has-ticker.admin-mode .layout { padding-top: calc(36px + 44px); }
+.ticker-track {
+  display: flex; align-items: center; height: 100%;
+  white-space: nowrap; animation: tickerScroll 24s linear infinite;
+}
+.ticker-item {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+  padding: 0 60px; flex-shrink: 0;
+}
+.ticker-item::before { content: '★ '; opacity: .7; }
+@keyframes tickerScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ══════════════════════════════════════
+   Search & Tag Filter
+══════════════════════════════════════ */
+.proj-search-wrap {
+  padding: 0 0 20px 0;
+}
+.proj-search-box {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: var(--sh-md); padding: 12px 18px; margin-bottom: 14px;
+}
+.proj-search-box svg { flex-shrink: 0; color: var(--ink-4); }
+.proj-search-input {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-family: var(--font); font-size: 14px; color: var(--ink);
+}
+.proj-search-input::placeholder { color: var(--ink-4); }
+.proj-tag-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.proj-tag-btn {
+  padding: 4px 12px; border-radius: var(--radius-pill);
+  border: 1.5px solid var(--bg-deep); background: var(--surface);
+  font-family: var(--font); font-size: 11px; font-weight: 600;
+  color: var(--ink-3); cursor: pointer;
+  transition: all .18s var(--ease);
+}
+.proj-tag-btn:hover { border-color: var(--blue); color: var(--blue); }
+.proj-tag-btn.active { background: var(--blue-dim); border-color: var(--blue); color: var(--blue); }
+.proj-no-result {
+  text-align: center; padding: 48px 0;
+  font-size: 14px; color: var(--ink-4);
+  display: none;
+}
+
+/* 외부 링크 아이콘 */
+.pcard-ext-icon {
+  flex-shrink: 0; color: var(--blue); opacity: 0;
+  transition: opacity .2s;
+}
+.pcard:hover .pcard-ext-icon { opacity: 1; }
+
+/* ══════════════════════════════════════
+   Contact Modal
+══════════════════════════════════════ */
+#contactModal {
+  position: fixed; inset: 0; z-index: 4000;
+  background: rgba(10,12,20,0.55); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; pointer-events: none; transition: opacity .25s var(--ease);
+}
+#contactModal.open { opacity: 1; pointer-events: all; }
+.cmodal-card {
+  background: var(--surface); border-radius: var(--radius-xl);
+  padding: 40px 44px; max-width: 480px; width: 100%;
+  box-shadow: var(--sh-lg); position: relative; overflow: hidden;
+  transform: translateY(24px) scale(0.97);
+  transition: transform .3s var(--spring);
+}
+#contactModal.open .cmodal-card { transform: none; }
+.cmodal-card::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(155deg, rgba(255,255,255,.50) 0%, transparent 42%);
+}
+.cmodal-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px; border: none; cursor: pointer;
+  background: var(--bg-deep); box-shadow: var(--sh-pressed);
+  border-radius: var(--radius-pill); color: var(--ink-3);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s; z-index: 1;
+}
+.cmodal-close:hover { color: var(--ink); transform: scale(1.05); }
+.cmodal-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.3px; }
+.cmodal-sub { font-size: 13px; color: var(--ink-3); line-height: 1.7; margin-bottom: 24px; }
+.cmodal-field { margin-bottom: 14px; }
+.cmodal-label {
+  font-size: 11px; font-weight: 700; color: var(--blue);
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;
+}
+.cmodal-input, .cmodal-textarea {
+  width: 100%; padding: 10px 14px; border: 1.5px solid var(--bg-deep);
+  border-radius: var(--radius); background: var(--bg);
+  font-family: var(--font); font-size: 13px; color: var(--ink);
+  outline: none; transition: border .2s;
+}
+.cmodal-input:focus, .cmodal-textarea:focus { border-color: var(--blue); background: var(--surface); }
+.cmodal-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+.cmodal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+@media (max-width:768px) { .cmodal-card { padding: 32px 24px; } }
 </style>
 </head>
 <body>
@@ -918,6 +1037,33 @@ body.admin-mode .admin-add-about { display: flex; }
   </div>
 </div>
 
+<!-- 연락 모달 -->
+<div id="contactModal">
+  <div class="cmodal-card">
+    <button class="cmodal-close" onclick="closeContactModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="cmodal-title">같이 만들어요</div>
+    <div class="cmodal-sub" id="cmodalSub">교육 현장에서 쓸 수 있는 도구, 함께 고민하고 싶은 아이디어가 있다면 편하게 연락 주세요.</div>
+    <div class="cmodal-field">
+      <div class="cmodal-label">이름</div>
+      <input id="cf-name" class="cmodal-input" placeholder="홍길동" type="text">
+    </div>
+    <div class="cmodal-field">
+      <div class="cmodal-label">이메일</div>
+      <input id="cf-email" class="cmodal-input" placeholder="you@example.com" type="email">
+    </div>
+    <div class="cmodal-field">
+      <div class="cmodal-label">내용</div>
+      <textarea id="cf-body" class="cmodal-textarea" placeholder="아이디어나 제안을 자유롭게 적어 주세요."></textarea>
+    </div>
+    <div class="cmodal-actions">
+      <button class="btn btn-ghost" onclick="closeContactModal()">닫기</button>
+      <button class="btn btn-primary" onclick="submitContactForm()">메일 보내기</button>
+    </div>
+  </div>
+</div>
+
 <!-- Mobile Nav -->
 <nav class="mobile-nav" id="mobileNav">
   <span class="sb-logo">KMJ</span>
@@ -931,6 +1077,11 @@ body.admin-mode .admin-add-about { display: flex; }
     <svg id="mThemeIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
   </button>
 </nav>
+
+<!-- 티커 배너 -->
+<div id="ticker">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
 
 <div class="layout">
 
@@ -1045,6 +1196,14 @@ body.admin-mode .admin-add-about { display: flex; }
     <section id="projects">
       <div class="section-label">Projects</div>
       <h2 class="section-title">직접 만든 도구들</h2>
+      <div class="proj-search-wrap" id="projSearchWrap" style="display:none">
+        <div class="proj-search-box">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="proj-search-input" id="projSearchInput" type="text" placeholder="프로젝트 검색…" oninput="filterProjects()">
+        </div>
+        <div class="proj-tag-filters" id="projTagFilters"></div>
+      </div>
+      <div class="proj-no-result" id="projNoResult">검색 결과가 없습니다.</div>
       <div class="proj-list" id="projList" style="position:relative">
         <!-- 스켈레톤 -->
         <div class="skeleton-card">
@@ -1092,10 +1251,16 @@ body.admin-mode .admin-add-about { display: flex; }
       <h2 class="section-title">같이 만들어요</h2>
       <div class="contact-card reveal">
         <p class="contact-sub" id="contactSub">교육 현장에서 쓸 수 있는 도구, 함께 고민하고 싶은 아이디어가 있다면 편하게 연락 주세요.</p>
-        <a href="mailto:kmj@kmj.kr" class="btn btn-primary" id="contactBtn">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          kmj@kmj.kr
-        </a>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <button class="btn btn-primary" id="contactModalBtn" onclick="openContactModal()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            문의하기
+          </button>
+          <a href="mailto:kmj@kmj.kr" class="btn btn-ghost" id="contactBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            kmj@kmj.kr
+          </a>
+        </div>
       </div>
     </section>
 
@@ -1275,7 +1440,13 @@ function saveCache(data) {
   try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
 }
 
+let siteFeatures = { showTicker: true, showContactModal: true, enableSearchFilter: true, enableSkeletonUI: true };
+let siteTickerText = '';
+
 async function loadData() {
+  if (!siteFeatures.enableSkeletonUI) {
+    document.querySelectorAll('.skeleton-card').forEach(el => el.style.display = 'none');
+  }
   renderAboutSkeleton();
   renderNotes([]);
 
@@ -1283,6 +1454,9 @@ async function loadData() {
   if (cached?.projects?.length) renderProjects(cached.projects);
   if (cached?.settings) applySettings(cached.settings);
   if (cached?.links) adminCurrentLinks = cached.links;
+  if (cached?.features) { siteFeatures = Object.assign({}, siteFeatures, cached.features); }
+  if (cached?.ticker) siteTickerText = cached.ticker;
+  if (cached?.features || cached?.ticker) applyFeatures(siteFeatures, siteTickerText);
 
   try {
     const res  = await fetch(GH_RAW + '?t=' + Date.now());
@@ -1290,8 +1464,11 @@ async function loadData() {
     const data = await res.json();
     const fresh = JSON.stringify({ projects: data.projects, settings: data.settings });
     const old   = JSON.stringify({ projects: cached?.projects, settings: cached?.settings });
-    saveCache({ projects: data.projects || [], settings: data.settings || {}, links: data.links || [] });
+    saveCache({ projects: data.projects || [], settings: data.settings || {}, links: data.links || [], features: data.features || {}, ticker: data.ticker || '' });
     adminCurrentLinks = data.links || [];
+    if (data.features) { siteFeatures = Object.assign({}, siteFeatures, data.features); }
+    if (data.ticker) siteTickerText = data.ticker;
+    applyFeatures(siteFeatures, siteTickerText);
     if (fresh !== old) {
       if (data.projects?.length) renderProjects(data.projects);
       if (data.settings) applySettings(data.settings);
@@ -1300,6 +1477,37 @@ async function loadData() {
 
   if (!document.querySelector('#aboutGrid .acard')) renderAboutCards(FALLBACK_ABOUT);
   if (!cached?.projects && !document.querySelector('.pcard')) renderProjects(FALLBACK_PROJECTS);
+}
+
+function applyFeatures(f, tickerText) {
+  if (f.showTicker && tickerText) {
+    initTicker(tickerText);
+  } else {
+    destroyTicker();
+  }
+  const modal = document.getElementById('contactModal');
+  const modalBtn = document.getElementById('contactModalBtn');
+  if (modalBtn) modalBtn.style.display = f.showContactModal ? '' : 'none';
+  const wrap = document.getElementById('projSearchWrap');
+  if (wrap) wrap.style.display = f.enableSearchFilter ? '' : 'none';
+  if (!f.enableSkeletonUI) {
+    document.querySelectorAll('.skeleton-card').forEach(el => el.style.display = 'none');
+  }
+}
+
+function initTicker(text) {
+  const ticker = document.getElementById('ticker');
+  const track  = document.getElementById('tickerTrack');
+  const repeated = (text + '　　　　').repeat(6);
+  track.innerHTML = `<span class="ticker-item">${repeated}</span><span class="ticker-item" aria-hidden="true">${repeated}</span>`;
+  ticker.classList.add('visible');
+  document.body.classList.add('has-ticker');
+}
+
+function destroyTicker() {
+  const ticker = document.getElementById('ticker');
+  ticker.classList.remove('visible');
+  document.body.classList.remove('has-ticker');
 }
 
 function applySettings(s) {
@@ -1439,8 +1647,8 @@ document.querySelectorAll('.cdui-toggle').forEach(el => el.classList.add('toggle
 ══════════════════════════════════════ */
 function hashPw(str) {
   let h = 5381;
-  for (let i = 0; i < str.length; i++) h = (Math.imul(h, 31) + str.charCodeAt(i)) | 0;
-  return (h >>> 0).toString(16);
+  for (let i = 0; i < str.length; i++) h = (((h << 5) + h) ^ str.charCodeAt(i)) >>> 0;
+  return h.toString(16);
 }
 const ADMIN_HASH = '7c516bee';
 
@@ -1570,6 +1778,9 @@ function renderProjects(projects) {
     card.className = 'pcard reveal';
     card.style.transitionDelay = (i * 0.08) + 's';
     card.dataset.idx = i;
+    card.dataset.title = p.title;
+    card.dataset.tags = normTags(p.tags).join(',');
+    const extIcon = p.link ? `<svg class="pcard-ext-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>` : '';
     card.innerHTML = `
       <div class="pcard-admin">
         <button class="pcard-admin-btn pcard-edit-btn" onclick="adminEditProject(event,${i})">✏️</button>
@@ -1581,6 +1792,7 @@ function renderProjects(projects) {
         <div class="pcard-desc">${p.desc}</div>
         <div class="pcard-tags">${normTags(p.tags).map(t=>`<span class="tag blue">${t}</span>`).join('')}</div>
       </div>
+      ${extIcon}
       <div class="pcard-arrow">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>`;
@@ -1588,6 +1800,58 @@ function renderProjects(projects) {
     list.appendChild(card);
     requestAnimationFrame(() => io.observe(card));
   });
+  initSearchFilter(projects);
+}
+
+function initSearchFilter(projects) {
+  if (!siteFeatures.enableSearchFilter) return;
+  const wrap = document.getElementById('projSearchWrap');
+  if (wrap) wrap.style.display = '';
+  const tagSet = new Set();
+  projects.forEach(p => normTags(p.tags).forEach(t => tagSet.add(t)));
+  const filterDiv = document.getElementById('projTagFilters');
+  if (!filterDiv) return;
+  filterDiv.innerHTML = '';
+  const allBtn = document.createElement('button');
+  allBtn.className = 'proj-tag-btn active'; allBtn.textContent = '전체';
+  allBtn.dataset.tag = '';
+  allBtn.onclick = () => setTagFilter('');
+  filterDiv.appendChild(allBtn);
+  tagSet.forEach(tag => {
+    const btn = document.createElement('button');
+    btn.className = 'proj-tag-btn'; btn.textContent = tag;
+    btn.dataset.tag = tag;
+    btn.onclick = () => setTagFilter(tag);
+    filterDiv.appendChild(btn);
+  });
+  const input = document.getElementById('projSearchInput');
+  if (input) input.value = '';
+  document.getElementById('projNoResult').style.display = 'none';
+}
+
+let _activeTagFilter = '';
+function setTagFilter(tag) {
+  _activeTagFilter = tag;
+  document.querySelectorAll('.proj-tag-btn').forEach(b => b.classList.toggle('active', b.dataset.tag === tag));
+  filterProjects();
+}
+
+function filterProjects() {
+  const q = (document.getElementById('projSearchInput')?.value || '').toLowerCase();
+  const tag = _activeTagFilter;
+  let visible = 0;
+  document.querySelectorAll('#projList .pcard').forEach(card => {
+    const title = card.dataset.title?.toLowerCase() || '';
+    const tags  = card.dataset.tags?.toLowerCase() || '';
+    const desc  = card.querySelector('.pcard-desc')?.textContent.toLowerCase() || '';
+    const matchQ   = !q   || title.includes(q) || desc.includes(q) || tags.includes(q);
+    const matchTag = !tag || tags.split(',').some(t => t.trim() === tag.toLowerCase());
+    const show = matchQ && matchTag;
+    card.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  const noResult = document.getElementById('projNoResult');
+  if (noResult) noResult.style.display = visible === 0 ? 'block' : 'none';
 }
 
 /* ── 프로젝트 편집 모달 ── */
@@ -1921,6 +2185,26 @@ function adminFillDefaults() {
   }
 }
 
+/* ── 연락 모달 ── */
+function openContactModal() {
+  document.getElementById('contactModal').classList.add('open');
+}
+function closeContactModal() {
+  document.getElementById('contactModal').classList.remove('open');
+}
+function submitContactForm() {
+  const name  = document.getElementById('cf-name').value.trim();
+  const email = document.getElementById('cf-email').value.trim();
+  const body  = document.getElementById('cf-body').value.trim();
+  const to    = document.getElementById('contactBtn')?.href?.replace('mailto:','') || 'kmj@kmj.kr';
+  const sub   = encodeURIComponent(`[kmj.kr 문의] ${name || '익명'}`);
+  const msg   = encodeURIComponent(`이름: ${name}\n이메일: ${email}\n\n${body}`);
+  window.location.href = `mailto:${to}?subject=${sub}&body=${msg}`;
+  closeContactModal();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeContactModal(); });
+document.getElementById('contactModal').addEventListener('click', e => { if (e.target === document.getElementById('contactModal')) closeContactModal(); });
+
 /* ── 저장 ── */
 async function adminSave() {
   const token = getToken();
@@ -1971,7 +2255,7 @@ async function adminSave() {
   settings.about = JSON.stringify(aboutCards);
   settings.notes = JSON.stringify(adminCurrentNotes);
 
-  const payload = JSON.stringify({ settings, projects: adminCurrentProjects, links: adminCurrentLinks }, null, 2);
+  const payload = JSON.stringify({ features: siteFeatures, ticker: siteTickerText, settings, projects: adminCurrentProjects, links: adminCurrentLinks }, null, 2);
   const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
 
   try {

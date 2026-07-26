@@ -202,6 +202,52 @@ body {
 #saveLinksBtn:disabled { opacity: .5; cursor: not-allowed; }
 #linksList:empty + .link-add-form { margin-top: 0; }
 .empty-msg { color: var(--ink-4); font-size: 13px; padding: 4px 0 8px; }
+
+/* ── feature flag toggle ── */
+.flag-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--bg-deep);
+}
+.flag-row:last-of-type { border-bottom: none; }
+.flag-info { flex: 1; min-width: 0; }
+.flag-label { font-size: 14px; font-weight: 700; color: var(--ink); }
+.flag-desc  { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.toggle-wrap { position: relative; flex-shrink: 0; margin-left: 16px; }
+.toggle-wrap input { position: absolute; opacity: 0; width: 0; height: 0; }
+.toggle-track {
+  display: block; width: 40px; height: 22px;
+  background: var(--bg-deep); border-radius: 11px;
+  transition: background .2s; cursor: pointer;
+}
+.toggle-wrap input:checked + .toggle-track { background: var(--blue); }
+.toggle-track::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform .2s var(--ease);
+}
+.toggle-wrap input:checked + .toggle-track::after { transform: translateX(18px); }
+.flags-ticker-field { margin-top: 16px; }
+.flags-ticker-label {
+  font-size: 11px; font-weight: 700; color: var(--blue);
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;
+}
+.flags-ticker-input {
+  width: 100%; padding: 10px 14px;
+  border: 1.5px solid var(--bg-deep); border-radius: var(--radius);
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font); font-size: 13px; outline: none; transition: border .2s;
+}
+.flags-ticker-input:focus { border-color: var(--blue); }
+.flags-footer { display: flex; justify-content: flex-end; margin-top: 20px; }
+#saveFlagsBtn {
+  padding: 9px 20px; border: none; cursor: pointer;
+  background: var(--blue); color: #fff;
+  border-radius: var(--radius); font-family: var(--font);
+  font-size: 13px; font-weight: 700; transition: opacity .15s;
+}
+#saveFlagsBtn:hover { opacity: .88; }
+#saveFlagsBtn:disabled { opacity: .5; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -243,6 +289,59 @@ body {
       <input type="password" id="tokenInput" class="token-input" placeholder="ghp_…">
       <button class="btn btn-blue" onclick="saveToken()">저장</button>
       <button class="btn btn-red" id="removeTokenBtn" onclick="removeToken()" style="display:none">삭제</button>
+    </div>
+  </div>
+
+  <!-- Feature Flags -->
+  <div class="tool-card">
+    <h3>기능 On/Off</h3>
+    <p class="card-desc">사이트의 각 기능을 켜거나 끌 수 있습니다. 저장하면 data.json에 반영됩니다.</p>
+    <div class="flag-row">
+      <div class="flag-info">
+        <div class="flag-label">티커 배너</div>
+        <div class="flag-desc">상단 공지 배너 스크롤 표시</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="flag-showTicker" onchange="onFlagChange()">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+    <div class="flag-row">
+      <div class="flag-info">
+        <div class="flag-label">문의하기 모달</div>
+        <div class="flag-desc">연락 섹션의 문의 모달 버튼</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="flag-showContactModal" onchange="onFlagChange()">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+    <div class="flag-row">
+      <div class="flag-info">
+        <div class="flag-label">프로젝트 검색 필터</div>
+        <div class="flag-desc">Projects 섹션 검색·태그 필터</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="flag-enableSearchFilter" onchange="onFlagChange()">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+    <div class="flag-row">
+      <div class="flag-info">
+        <div class="flag-label">스켈레톤 UI</div>
+        <div class="flag-desc">데이터 로딩 전 플레이스홀더 표시</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="flag-enableSkeletonUI" onchange="onFlagChange()">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+    <div class="flags-ticker-field">
+      <div class="flags-ticker-label">티커 텍스트</div>
+      <input type="text" id="flags-ticker-text" class="flags-ticker-input" placeholder="배너에 표시할 공지 내용">
+    </div>
+    <div class="flags-footer">
+      <button id="saveFlagsBtn" onclick="saveFlags()">GitHub에 저장</button>
     </div>
   </div>
 
@@ -441,9 +540,75 @@ document.getElementById('lf-url').addEventListener('keydown', e => {
   if (e.key === 'Enter') addLink();
 });
 
+/* ── feature flags ── */
+let _flagsDirty = false;
+const FLAG_IDS = ['showTicker', 'showContactModal', 'enableSearchFilter', 'enableSkeletonUI'];
+
+function onFlagChange() { _flagsDirty = true; }
+
+function applyFlagsUI(features, tickerText) {
+  FLAG_IDS.forEach(id => {
+    const el = document.getElementById('flag-' + id);
+    if (el) el.checked = features[id] !== false;
+  });
+  const tickerEl = document.getElementById('flags-ticker-text');
+  if (tickerEl) tickerEl.value = tickerText || '';
+  _flagsDirty = false;
+}
+
+async function saveFlags() {
+  const token = getToken();
+  if (!token) {
+    alert('토큰을 먼저 설정하세요.');
+    return;
+  }
+  const btn = document.getElementById('saveFlagsBtn');
+  btn.textContent = '저장 중…'; btn.disabled = true;
+
+  const features = {};
+  FLAG_IDS.forEach(id => {
+    const el = document.getElementById('flag-' + id);
+    if (el) features[id] = el.checked;
+  });
+  const tickerText = document.getElementById('flags-ticker-text')?.value.trim() || '';
+
+  const headers = {
+    Authorization: `token ${token}`,
+    Accept: 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json'
+  };
+  try {
+    let sha, existing = {};
+    const getRes = await fetch(GH_API, { headers });
+    if (getRes.ok) {
+      const meta = await getRes.json();
+      sha = meta.sha;
+      existing = JSON.parse(decodeURIComponent(escape(atob(meta.content.replace(/\n/g, '')))));
+    } else if (getRes.status !== 404) throw new Error(`GET ${getRes.status}`);
+
+    const merged = { ...existing, features, ticker: tickerText };
+    const payload = JSON.stringify(merged, null, 2);
+    const putBody = { message: 'Update feature flags', branch: GH_BRANCH, content: btoa(unescape(encodeURIComponent(payload))) };
+    if (sha) putBody.sha = sha;
+
+    const putRes = await fetch(GH_API, { method: 'PUT', headers, body: JSON.stringify(putBody) });
+    if (!putRes.ok) { const e = await putRes.json(); throw new Error(e.message || putRes.status); }
+
+    btn.textContent = '저장됨 ✓'; _flagsDirty = false;
+    setTimeout(() => { btn.textContent = 'GitHub에 저장'; btn.disabled = false; }, 2000);
+  } catch (e) {
+    btn.textContent = `실패: ${e.message}`; btn.disabled = false;
+    setTimeout(() => { btn.textContent = 'GitHub에 저장'; }, 3000);
+  }
+}
+
 /* ── init ── */
 async function initTools() {
   updateTokenStatus();
+  await loadData();
+}
+
+async function loadData() {
   await loadLinks();
 }
 
@@ -456,6 +621,7 @@ async function loadLinks() {
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
     links = data.links || [];
+    applyFlagsUI(data.features || { showTicker: true, showContactModal: true, enableSearchFilter: true, enableSkeletonUI: true }, data.ticker || '');
   } catch (e) {
     links = [];
     document.getElementById('linksHint').textContent = '불러오기 실패: ' + e.message;
