@@ -217,36 +217,6 @@ a { text-decoration: none; color: inherit; }
 /* ── Main ── */
 .main { margin-left: var(--sidebar-w); flex: 1; min-width: 0; transition: margin-left .3s var(--ease); }
 
-/* ── 링크 단축 패널 ── */
-.links-card {
-  background: var(--surface); border-radius: var(--radius-xl);
-  padding: 32px 36px; max-width: 540px; width: 100%;
-  box-shadow: var(--sh-lg); max-height: 80vh; overflow-y: auto;
-}
-.link-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 9px 12px; border-radius: var(--radius);
-  background: var(--bg); margin-bottom: 6px; font-size: 13px; min-width: 0;
-}
-.link-code { font-weight: 700; color: var(--blue); white-space: nowrap; min-width: 90px; }
-.link-url  { color: var(--ink-3); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.link-label { font-size: 11px; color: var(--ink-4); white-space: nowrap; }
-.link-copy-btn, .link-del-btn {
-  width: 26px; height: 26px; border: none; cursor: pointer; flex-shrink: 0;
-  border-radius: 50%; background: var(--bg-deep); color: var(--ink-3);
-  font-size: 12px; display: flex; align-items: center; justify-content: center; transition: all .15s;
-}
-.link-copy-btn:hover { background: var(--blue); color: #fff; }
-.link-del-btn:hover  { background: var(--red);  color: #fff; }
-.link-add-form { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
-.link-add-form input {
-  flex: 1; min-width: 100px; padding: 9px 12px;
-  border: 1.5px solid var(--bg-deep); border-radius: var(--radius);
-  background: var(--bg); color: var(--ink); font-family: var(--font);
-  font-size: 13px; outline: none; transition: border .2s;
-}
-.link-add-form input:focus { border-color: var(--blue); }
-
 /* ══════════════════════════════════════
    Sections
 ══════════════════════════════════════ */
@@ -880,34 +850,11 @@ body.admin-mode .admin-add-about { display: flex; }
 
 <!-- Admin Bar -->
 <div id="adminBar">
-  <span class="admin-bar-title">✏️ 편집 모드 — 파란 테두리 영역을 클릭해서 수정하세요</span>
+  <span class="admin-bar-title">✏️ 편집 모드</span>
   <button class="admin-bar-btn" style="background:rgba(255,255,255,0.18);color:#fff;font-size:12px;" onclick="adminFillDefaults()">기본 카드 채우기</button>
-  <button class="admin-bar-btn" style="background:rgba(255,255,255,0.18);color:#fff;font-size:12px;" onclick="openLinksPanel()">🔗 링크 단축</button>
-  <span id="ghTokenStatus" style="font-size:11px;color:rgba(255,255,255,0.75);white-space:nowrap;"></span>
-  <button class="admin-bar-btn" style="background:rgba(255,255,255,0.18);color:#fff;font-size:12px;" onclick="toggleTokenInput()">🔑 토큰</button>
-  <input type="password" id="ghTokenInput" placeholder="GitHub Personal Access Token" style="display:none;padding:5px 10px;border-radius:var(--radius);border:none;font-size:12px;background:rgba(255,255,255,0.92);color:#333;width:220px;" onkeydown="if(event.key==='Enter')saveToken()">
-  <button id="ghTokenSaveBtn" style="display:none;" class="admin-bar-btn" onclick="saveToken()">확인</button>
+  <a href="/tools.html" target="_blank" class="admin-bar-btn" style="background:rgba(255,255,255,0.18);color:#fff;font-size:12px;text-decoration:none;">⚙ 도구</a>
   <button class="admin-bar-btn admin-save-btn" onclick="adminSave()">저장</button>
   <button class="admin-bar-btn admin-exit-btn" onclick="exitAdmin()">종료</button>
-</div>
-
-<!-- 링크 단축 패널 -->
-<div id="linksPanel" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(10,12,20,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:24px;">
-  <div class="links-card">
-    <div style="font-size:18px;font-weight:800;margin-bottom:4px;">링크 단축</div>
-    <div style="font-size:12px;color:var(--ink-3);margin-bottom:20px;">kmj.kr/go/<em>코드</em> → 원하는 URL로 리다이렉트</div>
-    <div id="linksList"></div>
-    <div class="link-add-form">
-      <input id="lf-code" placeholder="코드 (비우면 자동생성)" style="flex:0 0 180px;">
-      <input id="lf-url" placeholder="https://..." style="flex:2;">
-      <input id="lf-label" placeholder="이름 (선택)">
-      <button onclick="addLink()" style="padding:9px 18px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;white-space:nowrap;flex-shrink:0;">+ 추가</button>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;">
-      <button onclick="closeLinksPanel()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--bg-deep);color:var(--ink-3);font-family:var(--font);font-size:13px;font-weight:600;">닫기</button>
-      <button id="linksSaveBtn" onclick="saveLinks()" style="padding:9px 22px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;">GitHub에 저장</button>
-    </div>
-  </div>
 </div>
 
 <!-- Admin 편집 모달 -->
@@ -1172,23 +1119,6 @@ const GH_API    = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/
 
 function getToken() { return localStorage.getItem('kmjkr_gh_token') || ''; }
 function setToken(t) { t ? localStorage.setItem('kmjkr_gh_token', t) : localStorage.removeItem('kmjkr_gh_token'); }
-function toggleTokenInput() {
-  const inp = document.getElementById('ghTokenInput');
-  const btn = document.getElementById('ghTokenSaveBtn');
-  const open = inp.style.display === 'none';
-  inp.style.display = open ? 'inline-block' : 'none';
-  btn.style.display = open ? 'inline-block' : 'none';
-  if (open) { inp.value = getToken(); inp.focus(); inp.select(); }
-}
-function saveToken() {
-  setToken(document.getElementById('ghTokenInput').value.trim());
-  toggleTokenInput();
-  updateTokenStatus();
-}
-function updateTokenStatus() {
-  const el = document.getElementById('ghTokenStatus');
-  if (el) el.textContent = getToken() ? '● 토큰 설정됨' : '○ 토큰 없음';
-}
 
 const FALLBACK_ABOUT = [
   {
@@ -1552,7 +1482,6 @@ function enterAdminMode() {
   history.replaceState({}, '', location.pathname);
   document.body.classList.add('admin-mode');
   document.getElementById('adminBar').style.display = 'flex';
-  updateTokenStatus();
 
   const sels = [
     '.hero-line-1', '.hero-title em', '.hero-title .line-accent',
@@ -1995,7 +1924,7 @@ function adminFillDefaults() {
 /* ── 저장 ── */
 async function adminSave() {
   const token = getToken();
-  if (!token) { toggleTokenInput(); return; }
+  if (!token) { window.open('/tools.html', '_blank'); return; }
 
   const btn = document.querySelector('.admin-save-btn');
   btn.textContent = '저장 중...'; btn.disabled = true;
@@ -2094,108 +2023,7 @@ function toggleSidebar() {
   }
 })();
 
-/* ── 링크 단축 ── */
 let adminCurrentLinks = [];
-
-function renderLinks() {
-  const list = document.getElementById('linksList');
-  if (!list) return;
-  if (!adminCurrentLinks.length) {
-    list.innerHTML = '<p style="color:var(--ink-4);font-size:13px;padding:8px 0 4px;">단축 링크가 없습니다.</p>';
-    return;
-  }
-  const copyIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`;
-  list.innerHTML = adminCurrentLinks.map((l, i) => `
-    <div class="link-row">
-      <span class="link-code">/go/${l.code}</span>
-      <span class="link-url" title="${l.url}">${l.url}</span>
-      ${l.label ? `<span class="link-label">${l.label}</span>` : ''}
-      <button class="link-copy-btn" onclick="copyShortLink('${l.code}',this)" title="복사">${copyIcon}</button>
-      <button class="link-del-btn" onclick="deleteLink(${i})" title="삭제">✕</button>
-    </div>`).join('');
-}
-
-function copyShortLink(code, btn) {
-  navigator.clipboard.writeText(`https://kmj.kr/go/${code}`).then(() => {
-    const orig = btn.innerHTML;
-    btn.textContent = '✓';
-    btn.style.background = 'var(--green)'; btn.style.color = '#fff';
-    setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; btn.style.color = ''; }, 1500);
-  });
-}
-
-function addLink() {
-  let code = document.getElementById('lf-code').value.trim();
-  const url  = document.getElementById('lf-url').value.trim();
-  const label = document.getElementById('lf-label').value.trim();
-  if (!url) { document.getElementById('lf-url').focus(); return; }
-  if (!code) code = Math.random().toString(36).slice(2, 7);
-  if (adminCurrentLinks.find(l => l.code === code)) {
-    document.getElementById('lf-code').style.borderColor = 'var(--red)';
-    setTimeout(() => document.getElementById('lf-code').style.borderColor = '', 1500);
-    return;
-  }
-  adminCurrentLinks.push({ code, url, label });
-  renderLinks();
-  document.getElementById('lf-code').value = '';
-  document.getElementById('lf-url').value  = '';
-  document.getElementById('lf-label').value = '';
-  document.getElementById('lf-url').focus();
-}
-
-function deleteLink(i) {
-  adminCurrentLinks.splice(i, 1);
-  renderLinks();
-}
-
-function openLinksPanel() {
-  renderLinks();
-  document.getElementById('linksPanel').style.display = 'flex';
-}
-
-function closeLinksPanel() {
-  document.getElementById('linksPanel').style.display = 'none';
-}
-
-async function saveLinks() {
-  const token = getToken();
-  if (!token) { closeLinksPanel(); toggleTokenInput(); return; }
-  const btn = document.getElementById('linksSaveBtn');
-  btn.textContent = '저장 중…'; btn.disabled = true;
-
-  const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
-  try {
-    let sha, existing = {};
-    const getRes = await fetch(GH_API, { headers });
-    if (getRes.ok) {
-      const meta = await getRes.json();
-      sha = meta.sha;
-      existing = JSON.parse(atob(meta.content.replace(/\n/g, '')));
-    } else if (getRes.status !== 404) throw new Error(`GET ${getRes.status}`);
-
-    const merged = { ...existing, links: adminCurrentLinks };
-    const payload = JSON.stringify(merged, null, 2);
-    const putBody = { message: 'Update short links', branch: GH_BRANCH, content: btoa(unescape(encodeURIComponent(payload))) };
-    if (sha) putBody.sha = sha;
-
-    const putRes = await fetch(GH_API, { method: 'PUT', headers, body: JSON.stringify(putBody) });
-    if (!putRes.ok) { const e = await putRes.json(); throw new Error(e.message || putRes.status); }
-
-    btn.textContent = '저장됨 ✓';
-    setTimeout(() => { btn.textContent = 'GitHub에 저장'; btn.disabled = false; }, 2000);
-  } catch (e) {
-    btn.textContent = `실패: ${e.message}`; btn.disabled = false;
-    setTimeout(() => { btn.textContent = 'GitHub에 저장'; }, 3000);
-  }
-}
-
-document.getElementById('linksPanel').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeLinksPanel();
-});
-
-document.getElementById('lf-url')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter') addLink();
-});
 
 /* ── 초기 로드 ── */
 loadData();
