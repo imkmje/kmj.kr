@@ -665,7 +665,7 @@ async function saveFlags() {
     if (!putRes.ok) { const e = await putRes.json(); throw new Error(e.message || putRes.status); }
 
     // localStorage 캐시 즉시 업데이트 — index.html 새로고침 시 바로 반영
-    setSiteCache({ features, ticker: tickerText });
+    setSiteCache({ features, ticker: tickerText, _savedAt: Date.now() });
 
     btn.textContent = '저장됨 ✓'; _flagsDirty = false;
     setTimeout(() => { btn.textContent = 'GitHub에 저장'; btn.disabled = false; }, 2000);

@@ -1887,20 +1887,31 @@ async function loadData() {
   if (cached?.ticker) siteTickerText = cached.ticker;
   if (cached?.features || cached?.ticker) applyFeatures(siteFeatures, siteTickerText);
 
+  // raw.githubusercontent.com은 CDN 캐시가 있어 방금 저장한 내용이 몇 분간 반영 안 될 수 있다.
+  // 저장 직후 새로고침했을 때 그 "오래된" 응답이 방금 저장한 내용을 다시 덮어써버리는 걸 막기 위해,
+  // 저장 후 일정 시간 동안은 네트워크 응답보다 방금 만든 로컬 캐시를 우선한다.
+  const GH_RAW_CACHE_GRACE_MS = 3 * 60 * 1000;
+  const justSaved = cached?._savedAt && (Date.now() - cached._savedAt < GH_RAW_CACHE_GRACE_MS);
+
   try {
     const res  = await fetch(GH_RAW + '?t=' + Date.now());
     if (!res.ok) throw new Error('not found');
     const data = await res.json();
     const fresh = JSON.stringify({ projects: data.projects, settings: data.settings });
     const old   = JSON.stringify({ projects: cached?.projects, settings: cached?.settings });
-    saveCache({ projects: data.projects || [], settings: data.settings || {}, links: data.links || [], features: data.features || {}, ticker: data.ticker || '' });
-    adminCurrentLinks = data.links || [];
-    if (data.features) { siteFeatures = Object.assign({}, siteFeatures, data.features); }
-    if (data.ticker) siteTickerText = data.ticker;
-    applyFeatures(siteFeatures, siteTickerText);
-    if (fresh !== old) {
-      if (data.projects?.length && !document.body.classList.contains('admin-mode')) renderProjects(data.projects);
-      if (data.settings) applySettings(data.settings);
+    if (justSaved) {
+      // 방금 저장한 값을 그대로 유지 — 네트워크가 낡은 캐시를 돌려줬을 수 있으므로 덮어쓰지 않는다.
+      adminCurrentLinks = cached?.links || [];
+    } else {
+      saveCache({ projects: data.projects || [], settings: data.settings || {}, links: data.links || [], features: data.features || {}, ticker: data.ticker || '' });
+      adminCurrentLinks = data.links || [];
+      if (data.features) { siteFeatures = Object.assign({}, siteFeatures, data.features); }
+      if (data.ticker) siteTickerText = data.ticker;
+      applyFeatures(siteFeatures, siteTickerText);
+      if (fresh !== old) {
+        if (data.projects?.length && !document.body.classList.contains('admin-mode')) renderProjects(data.projects);
+        if (data.settings) applySettings(data.settings);
+      }
     }
   } catch { /* data.json 없거나 네트워크 오류 → 캐시/fallback 사용 */ }
 
@@ -2979,7 +2990,7 @@ async function adminSave() {
     const putRes = await fetch(GH_API, { method: 'PUT', headers, body: JSON.stringify(putBody) });
     if (!putRes.ok) { const e = await putRes.json(); throw new Error(e.message || putRes.status); }
 
-    saveCache({ projects: adminCurrentProjects, settings, links: adminCurrentLinks, features: siteFeatures, ticker: siteTickerText });
+    saveCache({ projects: adminCurrentProjects, settings, links: adminCurrentLinks, features: siteFeatures, ticker: siteTickerText, _savedAt: Date.now() });
     clearDirty();
     btn.textContent = '저장됨 ✓';
     btn.classList.remove('dirty');
