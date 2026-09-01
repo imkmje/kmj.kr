@@ -311,17 +311,7 @@
 
         <!-- Student Area -->
         <div class="list-area">
-            <div class="class-selector mb-3">
-                <div class="d-flex gap-1">
-                    <button class="class-btn" data-class="3" onclick="loadClass(3)">3반</button>
-                    <button class="class-btn active" data-class="4" onclick="loadClass(4)">4반</button>
-                    <button class="class-btn" data-class="5" onclick="loadClass(5)">5반</button>
-                    <button class="class-btn" data-class="6" onclick="loadClass(6)">6반</button>
-                    <button class="class-btn" data-class="custom" onclick="loadClass('custom')">커스텀</button>
-                </div>
-            </div>
-
-            <div id="custom-panel" class="custom-input-area" style="display:none;">
+            <div id="custom-panel" class="custom-input-area">
                 <div class="custom-input-label">
                     ✏️ 이름 직접 입력
                     <span class="count-badge" id="name-count-badge">0명</span>
@@ -353,13 +343,6 @@
 </div>
 
 <script>
-    const rawData = {
-        3: "강성훈 강현서 김건영 김민섭 김범준 김성곤 김준우 김현서 박서준 박주혁 박준현 박하준 서우찬 송현수 신경호 오승수 오호연 이완 정희윤 최대근 최민혁 하동헌",
-        4: "고근영 권민재 권희원 김가빈 김민규 김상혁 김준서 남규백 박기범 박명헌 박인우 배동규 성치윤 손화랑 심선호 이솔 이정운 정효진 조범수 천동현 최승민 허윤성",
-        5: "강동현 강문용 구도훈 김도진 김동현 김동훈 김민우 김윤현 박자원 백승주 손태형 원용준 은준서 이동엽 장우진 정슬우 정예찬 지연우 지후성 천우진 하태권 황재경",
-        6: "구충원 권도원 권우영 기동준 김민승 김상우 김재원 김주찬 류현동 박민혁 박선우 서정원 윤승규 이서진 이원우 이정빈 이정빈 이준우 전민준 정건 조윤도 최승민 최준"
-    };
-
     // [개선7] 다크모드 대응 파레트: 라이트/다크 모드별로 채도·명도 구분
     const paletteLt = ["#94b9ff","#b4e08f","#ffd58d","#ffadaa","#d9a7e6","#9bdad3","#cfd8dc"];
     const paletteDk = ["#2a5cbf","#4a8a2a","#b07820","#b03040","#7040a0","#207868","#606878"];
@@ -376,7 +359,7 @@
     let dragVelocity = 0;
     let historyList = [];
     let lastPointerIndex = -1;
-    let currentClass = 4;
+    let currentClass = 'custom';
     let pendingCustomNames = [];
 
     // [개선1] 포인터 댐핑 진동 상태
@@ -394,7 +377,9 @@
     const wheelContainer = document.getElementById('wheel-container');
 
     function init() {
-        loadClass(4);
+        students = []; students._source = 'custom';
+        renderList();
+        updateNameCountBadge();
         requestAnimationFrame(updateLoop);
         setupGestures();
         // 테마 변경 시 팔레트 반영
@@ -405,31 +390,6 @@
     function syncPaletteToTheme() {
         const pal = getPalette();
         students.forEach((s, i) => { s.color = pal[i % pal.length]; });
-    }
-
-    /* ───────── 반 로딩 ───────── */
-    function loadClass(classKey) {
-        if (isSpinning) return;
-        currentClass = classKey;
-        document.querySelectorAll('.class-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.class === String(classKey));
-        });
-        const customPanel = document.getElementById('custom-panel');
-        if (classKey === 'custom') {
-            customPanel.style.display = 'block';
-            if (students.length === 0 || students._source !== 'custom') {
-                students = []; students._source = 'custom';
-            }
-            renderList();
-            updateNameCountBadge();
-        } else {
-            customPanel.style.display = 'none';
-            const pal = getPalette();
-            students = rawData[classKey].split(' ').map((name, idx) => ({
-                id: idx, name, weight: 1, currentWeight: 1, excluded: false, color: pal[idx % pal.length]
-            }));
-            renderList();
-        }
     }
 
     /* ───────── 커스텀 입력 ───────── */
