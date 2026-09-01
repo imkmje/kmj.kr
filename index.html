@@ -356,6 +356,7 @@ html[data-theme="dark"] .skeleton-card::after {
 }
 .pcard-body { flex: 1; min-width: 0; width: 100%; }
 .pcard-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+.pcard-thumb { width: 100%; height: 120px; object-fit: cover; border-radius: var(--radius); margin-bottom: 12px; }
 .pcard-title { font-size: 18px; font-weight: 800; color: var(--ink); margin-bottom: 6px; line-height: 1.3; letter-spacing: -.2px; }
 .pcard-desc  { font-size: 13px; color: var(--ink-3); line-height: 1.7; margin-bottom: 14px; }
 .pcard-tags  { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -477,6 +478,12 @@ body.hide-qr .pcard-qr-btn { display: none !important; }
 .ncard-body  { font-size: 13px; color: var(--ink-3); line-height: 1.75;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .ncard-expanded .ncard-body { -webkit-line-clamp: unset; overflow: visible; }
+.ncard-body h2 { font-size: 15px; font-weight: 800; color: var(--ink); margin: 8px 0 4px; }
+.ncard-body blockquote { border-left: 3px solid var(--blue); padding-left: 12px; margin: 6px 0; }
+.ncard-body ul, .ncard-body ol { padding-left: 20px; margin: 6px 0; }
+.ncard-body img { max-width: 100%; border-radius: 12px; margin: 8px 0; display: block; }
+.ncard-body a { color: var(--blue); text-decoration: underline; }
+.ncard-body hr { border: none; border-top: 1px solid var(--bg-deep); margin: 10px 0; }
 .ncard-more { display: inline-block; margin-top: 8px; font-size: 12px; color: var(--blue); cursor: pointer; background: none; border: none; font-family: var(--font); padding: 0; }
 
 /* note admin */
@@ -720,6 +727,34 @@ body.admin-mode .admin-add-about { display: flex; }
 }
 .admin-input:focus, .admin-textarea:focus { border-color: var(--blue); background: var(--surface); }
 .admin-textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+
+/* 노트 리치텍스트 에디터 */
+.rte-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 2px;
+  padding: 6px; border: 1px solid var(--bg-deep); border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0; background: var(--bg);
+}
+.rte-btn {
+  min-width: 28px; height: 28px; padding: 0 6px; border: none; cursor: pointer;
+  background: transparent; border-radius: 6px; color: var(--ink-2);
+  font-family: var(--font); font-size: 12px; font-weight: 700; transition: background .15s;
+}
+.rte-btn:hover { background: var(--bg-deep); }
+.rte-sep { width: 1px; height: 18px; background: var(--bg-deep); margin: 0 4px; flex-shrink: 0; }
+.rte-body {
+  width: 100%; min-height: 140px; max-height: 360px; overflow-y: auto;
+  padding: 10px 14px; border: 1.5px solid var(--bg-deep); border-radius: 0 0 var(--radius) var(--radius);
+  font-family: var(--font); font-size: 14px; color: var(--ink); background: var(--bg);
+  outline: none; line-height: 1.7; transition: border .2s;
+}
+.rte-body:focus { border-color: var(--blue); }
+.rte-body:empty::before { content: attr(data-placeholder); color: var(--ink-4); }
+.rte-body h2 { font-size: 17px; font-weight: 800; margin: 10px 0 6px; }
+.rte-body blockquote { border-left: 3px solid var(--blue); padding-left: 12px; color: var(--ink-3); margin: 8px 0; }
+.rte-body ul, .rte-body ol { padding-left: 22px; margin: 6px 0; }
+.rte-body img { max-width: 100%; border-radius: 12px; margin: 8px 0; display: block; }
+.rte-body a { color: var(--blue); text-decoration: underline; }
+.rte-body hr { border: none; border-top: 1px solid var(--bg-deep); margin: 12px 0; }
 .admin-modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
 
 /* ══════════════════════════════════════
@@ -936,6 +971,15 @@ body.has-ticker.admin-mode .layout { padding-top: calc(36px + 44px); }
   font-size: 88px; font-weight: 800; color: rgba(255,255,255,0.88);
   line-height: 1; letter-spacing: -3px; position: relative;
 }
+.hero-avatar-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.avatar-upload-btn {
+  display: none; position: absolute; bottom: 10px; right: 10px; z-index: 2;
+  width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+  background: rgba(10,12,20,0.55); color: #fff; backdrop-filter: blur(4px);
+  align-items: center; justify-content: center; transition: background .15s;
+}
+.avatar-upload-btn:hover { background: rgba(10,12,20,0.75); }
+body.admin-mode .avatar-upload-btn { display: flex; }
 .hero-badge-row { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 220px; }
 .hero-badge {
   font-size: 11px; font-weight: 700; padding: 7px 14px;
@@ -1087,7 +1131,22 @@ html[data-theme="dark"] .stat-card::after { opacity: 0; }
     </div>
     <div style="margin-bottom:20px;">
       <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">내용</div>
-      <textarea id="nm-body" rows="6" placeholder="내용을 입력하세요." style="width:100%;padding:10px 14px;border:1.5px solid var(--bg-deep);border-radius:var(--radius);font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg);outline:none;resize:vertical;line-height:1.7;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--bg-deep)'"></textarea>
+      <div class="rte-toolbar">
+        <button type="button" class="rte-btn" title="굵게" onmousedown="event.preventDefault()" onclick="rteExec('bold')"><b>B</b></button>
+        <button type="button" class="rte-btn" title="기울임" onmousedown="event.preventDefault()" onclick="rteExec('italic')"><i>I</i></button>
+        <button type="button" class="rte-btn" title="밑줄" onmousedown="event.preventDefault()" onclick="rteExec('underline')"><u>U</u></button>
+        <span class="rte-sep"></span>
+        <button type="button" class="rte-btn" title="제목" onmousedown="event.preventDefault()" onclick="rteExec('formatBlock','H2')">H2</button>
+        <button type="button" class="rte-btn" title="인용구" onmousedown="event.preventDefault()" onclick="rteExec('formatBlock','BLOCKQUOTE')">”</button>
+        <button type="button" class="rte-btn" title="글머리 목록" onmousedown="event.preventDefault()" onclick="rteExec('insertUnorderedList')">•≡</button>
+        <button type="button" class="rte-btn" title="번호 목록" onmousedown="event.preventDefault()" onclick="rteExec('insertOrderedList')">1≡</button>
+        <span class="rte-sep"></span>
+        <button type="button" class="rte-btn" title="링크" onmousedown="event.preventDefault()" onclick="rteLink()">🔗</button>
+        <button type="button" class="rte-btn" title="이미지" onmousedown="event.preventDefault()" onclick="rteImage()">🖼️</button>
+        <button type="button" class="rte-btn" title="구분선" onmousedown="event.preventDefault()" onclick="rteExec('insertHorizontalRule')">―</button>
+        <input type="file" id="rte-image-input" accept="image/*" style="display:none" onchange="rteImageChange(this)">
+      </div>
+      <div id="nm-body" class="rte-body" contenteditable="true" data-placeholder="내용을 입력하세요."></div>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button onclick="closeNoteModal()" style="padding:9px 20px;border:none;cursor:pointer;border-radius:var(--radius-pill);background:var(--bg-deep);color:var(--ink-3);font-family:var(--font);font-size:13px;font-weight:600;">취소</button>
@@ -1213,6 +1272,18 @@ html[data-theme="dark"] .stat-card::after { opacity: 0; }
       <input class="admin-input" id="af-link" placeholder="https://...">
     </div>
     <div class="admin-field">
+      <div class="admin-label">대표 이미지 (선택)</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <img id="af-thumb-preview" style="display:none;width:56px;height:56px;object-fit:cover;border-radius:var(--radius-sm);">
+        <label class="admin-file-label" style="flex:1;">
+          <input type="file" id="af-thumb" accept="image/*" style="display:none" onchange="adminThumbChange(this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span id="af-thumb-text">이미지 선택...</span>
+        </label>
+        <button type="button" id="af-thumb-remove" onclick="adminThumbRemove()" style="display:none;padding:6px 10px;border:none;border-radius:var(--radius-pill);background:var(--red-dim);color:var(--red);font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;">제거</button>
+      </div>
+    </div>
+    <div class="admin-field">
       <div class="admin-label">HTML 파일 첨부 (링크 대신 사용)</div>
       <label class="admin-file-label">
         <input type="file" id="af-file" accept=".html" style="display:none" onchange="adminFileChange(this)">
@@ -1220,6 +1291,11 @@ html[data-theme="dark"] .stat-card::after { opacity: 0; }
         <span id="af-file-text">파일 선택...</span>
       </label>
       <div class="admin-file-attached" id="af-file-name"></div>
+      <details style="margin-top:8px;">
+        <summary style="font-size:11px;color:var(--ink-3);cursor:pointer;">고급: 게시 경로</summary>
+        <input class="admin-input" id="af-file-path" placeholder="files/파일명.html" style="margin-top:6px;font-size:12px;">
+        <div style="font-size:10px;color:var(--ink-4);margin-top:4px;">같은 경로에 저장하면 URL(QR코드·북마크 포함)이 유지됩니다. 비워두면 자동으로 정해집니다.</div>
+      </details>
     </div>
     <div class="admin-modal-actions">
       <button class="admin-bar-btn admin-exit-btn" style="background:var(--bg-deep);color:var(--ink-3)" onclick="closeAdminModal()">취소</button>
@@ -1234,6 +1310,7 @@ html[data-theme="dark"] .stat-card::after { opacity: 0; }
     <button class="modal-close" id="modalClose">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
+    <img id="modalThumb" style="display:none;width:100%;height:160px;object-fit:cover;border-radius:var(--radius-lg);margin-bottom:16px;">
     <div class="modal-title" id="modalTitle"></div>
     <div class="modal-status" id="modalStatus"></div>
     <div class="modal-desc" id="modalDesc"></div>
@@ -1367,8 +1444,12 @@ html[data-theme="dark"] .stat-card::after { opacity: 0; }
           </div>
         </div>
         <div class="hero-right">
-          <div class="hero-avatar">
+          <div class="hero-avatar" id="heroAvatar">
             <span class="hero-initial">K</span>
+            <label class="avatar-upload-btn" title="사진 변경">
+              <input type="file" id="af-avatar" accept="image/*" style="display:none" onchange="heroAvatarChange(this)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </label>
           </div>
           <div class="hero-badge-row">
             <div class="hero-badge"><strong>Google Certified Trainer</strong></div>
@@ -1542,8 +1623,47 @@ function setToken(t) { t ? localStorage.setItem('kmjkr_gh_token', t) : localStor
 
 function b64utf8(str) { return btoa(unescape(encodeURIComponent(str))); }
 
-/* 관리자 첨부파일을 실제로 저장소(files/)에 업로드 → 성공 시 사이트 어디서나 열리는 상대경로 반환 */
-async function ghPutFile(relPath, content, token, message) {
+/* 이미지를 캔버스에 그려 리사이즈·압축 → base64(데이터만, 접두사 제외) 반환.
+   GitHub Contents API의 실질적 파일 크기 제약을 피하고 로딩 속도도 개선한다.
+   (투명 배경 PNG는 흰 배경으로 합성되지만, 아바타·사진 용도이므로 허용 가능한 손실) */
+function compressImage(fileOrDataUrl, maxDim = 1200, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const proceed = (dataUrl) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const scale = maxDim / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, width, height); // 투명 배경 합성
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => {
+          if (!blob) { reject(new Error('이미지 변환 실패')); return; }
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = () => reject(new Error('이미지 읽기 실패'));
+          reader.readAsDataURL(blob);
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = () => reject(new Error('이미지 디코딩 실패'));
+      img.src = dataUrl;
+    };
+    // File/Blob과, JSON 직렬화를 거쳐 살아남은 dataURL 문자열(예: 임시 보관된 프로젝트 썸네일) 모두 지원
+    if (typeof fileOrDataUrl === 'string') { proceed(fileOrDataUrl); return; }
+    const reader = new FileReader();
+    reader.onload = () => proceed(reader.result);
+    reader.onerror = () => reject(new Error('파일 읽기 실패'));
+    reader.readAsDataURL(fileOrDataUrl);
+  });
+}
+
+/* 관리자 업로드 공통 코어 — GET(sha)+PUT. base64로 인코딩된 content를 그대로 받는다. */
+async function ghPutContentB64(relPath, base64Content, token, message) {
   const encPath = encodeURI(relPath);
   const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${encPath}`;
   const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
@@ -1551,11 +1671,22 @@ async function ghPutFile(relPath, content, token, message) {
   const getRes = await fetch(url, { headers, cache: 'no-store' });
   if (getRes.ok) sha = (await getRes.json()).sha;
   else if (getRes.status !== 404) throw new Error(`GET ${relPath} ${getRes.status}`);
-  const body = { message, branch: GH_BRANCH, content: b64utf8(content) };
+  const body = { message, branch: GH_BRANCH, content: base64Content };
   if (sha) body.sha = sha;
   const putRes = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
   if (!putRes.ok) { const e = await putRes.json(); throw new Error(e.message || putRes.status); }
   return encPath;
+}
+
+/* 텍스트/HTML 파일 업로드 (기존 발표자료·도구 HTML 파일첨부 등) */
+async function ghPutTextFile(relPath, text, token, message) {
+  return ghPutContentB64(relPath, b64utf8(text), token, message);
+}
+
+/* 이미지 업로드 — 리사이즈·압축 후 업로드 */
+async function ghPutImageFile(relPath, file, token, message) {
+  const b64 = await compressImage(file);
+  return ghPutContentB64(relPath, b64, token, message);
 }
 
 const FALLBACK_ABOUT = [
@@ -1873,6 +2004,31 @@ function applySettings(s) {
   if (s.footer_badges) { try { const bs = JSON.parse(s.footer_badges); document.querySelectorAll('.footer-badge').forEach((el, i) => { if (bs[i] !== undefined) el.textContent = bs[i]; }); } catch {} }
   if (s.stats_items !== undefined) { try { _statsFromData = true; renderStats(JSON.parse(s.stats_items)); } catch {} }
   if (s.faq_items) { try { renderFaq(JSON.parse(s.faq_items)); _faqInited = true; } catch {} }
+  if (s.hero_avatar_url) { currentHeroAvatarUrl = s.hero_avatar_url; renderHeroAvatar(s.hero_avatar_url); }
+}
+
+/* ── 히어로 아바타 이미지 ── */
+let currentHeroAvatarUrl = null;
+let _pendingAvatarFile = null;
+function renderHeroAvatar(url) {
+  const el = document.getElementById('heroAvatar');
+  if (!el) return;
+  let img = el.querySelector('.hero-avatar-img');
+  if (!img) {
+    img = document.createElement('img');
+    img.className = 'hero-avatar-img';
+    el.insertBefore(img, el.firstChild);
+  }
+  img.src = url;
+  const initial = el.querySelector('.hero-initial');
+  if (initial) initial.style.display = 'none';
+}
+function heroAvatarChange(input) {
+  const file = input.files[0];
+  if (!file) return;
+  _pendingAvatarFile = file;
+  renderHeroAvatar(URL.createObjectURL(file));
+  markDirty();
 }
 
 function renderCareerItems(items) {
@@ -1899,6 +2055,8 @@ function renderCareerItems(items) {
 
 /* ── 모달 ── */
 function openModal(p) {
+  const thumb = document.getElementById('modalThumb');
+  if (p.thumbUrl) { thumb.src = p.thumbUrl; thumb.style.display = ''; } else { thumb.style.display = 'none'; }
   document.getElementById('modalTitle').textContent  = p.title;
   document.getElementById('modalStatus').innerHTML   = `<span class="status ${p.status}">${p.statusLabel}</span>`;
   document.getElementById('modalDesc').textContent   = p.detail || p.desc;
@@ -2163,6 +2321,7 @@ function renderProjects(projects) {
         <button class="pcard-admin-btn pcard-del-btn"  onclick="adminDelProject(event,${i})">✕</button>
       </div>
       <div class="pcard-body">
+        ${p.thumbUrl ? `<img class="pcard-thumb" src="${p.thumbUrl}" alt="">` : ''}
         <div class="pcard-meta"><span class="status ${p.status}">${p.statusLabel}</span></div>
         <div class="pcard-title">${p.title}</div>
         <div class="pcard-desc">${p.desc}</div>
@@ -2249,12 +2408,47 @@ function openAdminModal(title, p) {
   document.getElementById('af-file-name').textContent = p.fileName
     ? `현재 파일: ${p.fileName}${p.fileUrl ? '' : ' (업로드 안 됨 — 다시 첨부 후 저장해 주세요)'}`
     : '';
+  document.getElementById('af-file-path').value = p.filePath || '';
+  // 대표 이미지
+  _pendingThumbDataUrl = null; _thumbRemoved = false;
+  document.getElementById('af-thumb').value = '';
+  document.getElementById('af-thumb-text').textContent = '이미지 선택...';
+  const thumbPreview = document.getElementById('af-thumb-preview');
+  if (p.thumbUrl) { thumbPreview.src = p.thumbUrl; thumbPreview.style.display = ''; document.getElementById('af-thumb-remove').style.display = ''; }
+  else { thumbPreview.style.display = 'none'; document.getElementById('af-thumb-remove').style.display = 'none'; }
   document.getElementById('adminModal').classList.add('open');
 }
 function adminFileChange(input) {
+  const pathField = document.getElementById('af-file-path');
+  if (!pathField.value.trim() && input.files[0]) pathField.value = `${GH_FILES_DIR}/${input.files[0].name}`;
   const name = input.files[0]?.name || '';
   document.getElementById('af-file-text').textContent = name || '파일 선택...';
   document.getElementById('af-file-name').textContent = '';
+}
+
+/* ── 프로젝트 대표 이미지 ── */
+let _pendingThumbDataUrl = null;
+let _thumbRemoved = false;
+function adminThumbChange(input) {
+  const file = input.files[0];
+  if (!file) return;
+  _thumbRemoved = false;
+  const reader = new FileReader();
+  reader.onload = () => {
+    _pendingThumbDataUrl = reader.result;
+    const preview = document.getElementById('af-thumb-preview');
+    preview.src = reader.result; preview.style.display = '';
+    document.getElementById('af-thumb-text').textContent = file.name;
+    document.getElementById('af-thumb-remove').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+function adminThumbRemove() {
+  _pendingThumbDataUrl = null; _thumbRemoved = true;
+  document.getElementById('af-thumb').value = '';
+  document.getElementById('af-thumb-text').textContent = '이미지 선택...';
+  document.getElementById('af-thumb-preview').style.display = 'none';
+  document.getElementById('af-thumb-remove').style.display = 'none';
 }
 function closeAdminModal() {
   document.getElementById('adminModal').classList.remove('open');
@@ -2262,12 +2456,24 @@ function closeAdminModal() {
 }
 document.getElementById('adminModal').addEventListener('click', e => { if (e.target===e.currentTarget) closeAdminModal(); });
 
+/* 시스템 파일 보호 — 이 경로들은 관리자 파일첨부로 절대 덮어쓸 수 없다 */
+const GH_PROTECTED_PATHS = ['data.json', 'index.html', 'tools.html', '404.html', 'cname'];
+function isProtectedPath(path) {
+  return GH_PROTECTED_PATHS.includes(path.replace(/^\/+/, '').toLowerCase());
+}
+
 function adminModalConfirm() {
   const statusVal = document.getElementById('af-status').value;
   const existing  = adminEditingIdx >= 0 ? adminCurrentProjects[adminEditingIdx] : null;
   const fileInput = document.getElementById('af-file');
 
   const saveProject = (fileInfo) => {
+    let filePath = document.getElementById('af-file-path').value.trim().replace(/^\/+/, '');
+    if (fileInfo.content && !filePath) filePath = `${GH_FILES_DIR}/${fileInfo.fileName}`;
+    if (fileInfo.content && isProtectedPath(filePath)) {
+      alert(`"${filePath}"는 사이트 시스템 파일이라 덮어쓸 수 없습니다. 다른 경로를 입력해 주세요.`);
+      return;
+    }
     const p = {
       title:       document.getElementById('af-title').value,
       status:      statusVal,
@@ -2278,10 +2484,13 @@ function adminModalConfirm() {
       link:        document.getElementById('af-link').value,
       hasFile:     fileInfo.hasFile,
       fileName:    fileInfo.fileName || null,
+      filePath:    fileInfo.content ? filePath : (existing?.filePath || null),
       fileUrl:     fileInfo.content ? null : (existing?.fileUrl || null), // 새 파일 선택 시 업로드 전까지 비움
+      thumbUrl:    _thumbRemoved ? null : (_pendingThumbDataUrl ? null : (existing?.thumbUrl || null)),
     };
-    // 새로 선택한 파일 내용은 '저장' 클릭 시 adminSave()가 실제로 GitHub(files/)에 업로드한다.
+    // 새로 선택한 파일 내용은 '저장' 클릭 시 adminSave()가 실제로 GitHub(같은 경로)에 업로드한다.
     if (fileInfo.content) p._pendingFileContent = fileInfo.content;
+    if (_pendingThumbDataUrl) p._pendingThumbContent = _pendingThumbDataUrl;
     if (adminEditingIdx >= 0) adminCurrentProjects[adminEditingIdx] = p;
     else adminCurrentProjects.push(p);
     markDirty();
@@ -2437,6 +2646,75 @@ function delAcardTag(e, btn) {
   btn.closest('.tag').remove();
 }
 
+/* ── 기록(Notes) 리치텍스트 에디터 ── */
+function rteExec(cmd, val) {
+  document.getElementById('nm-body').focus();
+  document.execCommand(cmd, false, val || null);
+}
+let _rteSavedRange = null;
+function rteLink() {
+  const bodyEl = document.getElementById('nm-body');
+  bodyEl.focus();
+  const url = prompt('링크 URL을 입력하세요 (https://...)');
+  if (!url) return;
+  document.execCommand('createLink', false, url);
+  bodyEl.querySelectorAll(`a[href="${CSS.escape(url)}"]`).forEach(a => { a.target = '_blank'; a.rel = 'noopener noreferrer'; });
+}
+function rteImage() {
+  const bodyEl = document.getElementById('nm-body');
+  bodyEl.focus();
+  const sel = window.getSelection();
+  _rteSavedRange = sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+  document.getElementById('rte-image-input').click();
+}
+async function rteImageChange(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  const token = getToken();
+  if (!token) { alert('토큰을 먼저 설정하세요. (도구 페이지에서 설정)'); return; }
+  const bodyEl = document.getElementById('nm-body');
+  bodyEl.focus();
+  if (_rteSavedRange) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(_rteSavedRange); }
+  try {
+    const url = await ghPutImageFile(`images/note-${Date.now()}-${Math.random().toString(36).slice(2,7)}.jpg`, file, token, 'Insert note image');
+    document.execCommand('insertHTML', false, `<img src="${url}" alt="">`);
+  } catch (e) {
+    alert('이미지 업로드 실패: ' + e.message);
+  }
+}
+
+/* 붙여넣기 등으로 들어온 지저분한 마크업 정리 — 방어 목적이 아니라 위생 목적(작성자는 관리자 본인뿐) */
+const RTE_ALLOWED_TAGS  = new Set(['B','STRONG','I','EM','U','H2','H3','UL','OL','LI','BLOCKQUOTE','A','IMG','P','BR','SPAN','HR','DIV']);
+const RTE_ALLOWED_ATTRS = { A: ['href','target','rel'], IMG: ['src','alt'] };
+function sanitizeHtml(html) {
+  const tpl = document.createElement('template');
+  tpl.innerHTML = html;
+  const walk = (node) => {
+    let child = node.firstChild;
+    while (child) {
+      const next = child.nextSibling;
+      if (child.nodeType === 1) {
+        if (!RTE_ALLOWED_TAGS.has(child.tagName)) {
+          while (child.firstChild) node.insertBefore(child.firstChild, child);
+          node.removeChild(child);
+        } else {
+          const allowed = RTE_ALLOWED_ATTRS[child.tagName] || [];
+          [...child.attributes].forEach(attr => {
+            if (!allowed.includes(attr.name) || /^\s*javascript:/i.test(attr.value || '')) child.removeAttribute(attr.name);
+          });
+          walk(child);
+        }
+      } else if (child.nodeType !== 3) {
+        node.removeChild(child); // 주석 등 텍스트·엘리먼트가 아닌 노드 제거
+      }
+      child = next;
+    }
+  };
+  walk(tpl.content);
+  return tpl.innerHTML;
+}
+
 /* ── 기록(Notes) ── */
 let adminCurrentNotes = [];
 let noteEditingIdx = -1;
@@ -2492,7 +2770,7 @@ function addNote() {
   document.getElementById('nm-date').value  = today;
   document.getElementById('nm-cat').value   = '';
   document.getElementById('nm-title').value = '';
-  document.getElementById('nm-body').value  = '';
+  document.getElementById('nm-body').innerHTML = '';
   document.getElementById('noteModal').style.display = 'flex';
   setTimeout(() => document.getElementById('nm-title').focus(), 50);
 }
@@ -2505,7 +2783,9 @@ function editNote(e, i) {
   document.getElementById('nm-date').value  = n.date || '';
   document.getElementById('nm-cat').value   = n.category || '';
   document.getElementById('nm-title').value = n.title || '';
-  document.getElementById('nm-body').value  = n.body || '';
+  const body = n.body || '';
+  // 옛 일반 텍스트 노트는 줄바꿈을 <br>로 변환, 이미 서식 있는 HTML이면 그대로 표시(하위 호환)
+  document.getElementById('nm-body').innerHTML = /<[a-z][\s\S]*>/i.test(body) ? body : body.replace(/\n/g, '<br>');
   document.getElementById('noteModal').style.display = 'flex';
   setTimeout(() => document.getElementById('nm-title').focus(), 50);
 }
@@ -2524,11 +2804,13 @@ function closeNoteModal() {
 }
 
 function confirmNote() {
+  const bodyEl = document.getElementById('nm-body');
+  const isEmpty = !bodyEl.textContent.trim() && !bodyEl.querySelector('img');
   const n = {
     date:     document.getElementById('nm-date').value,
     category: document.getElementById('nm-cat').value.trim(),
     title:    document.getElementById('nm-title').value.trim(),
-    body:     document.getElementById('nm-body').value.trim(),
+    body:     isEmpty ? '' : sanitizeHtml(bodyEl.innerHTML),
   };
   if (!n.title) return;
   if (noteEditingIdx >= 0) adminCurrentNotes[noteEditingIdx] = n;
@@ -2590,15 +2872,44 @@ async function adminSave() {
   const btn = document.querySelector('.admin-save-btn');
   btn.textContent = '저장 중...'; btn.disabled = true;
 
-  // 새로 첨부된 파일이 있으면 data.json을 쓰기 전에 먼저 files/ 에 실제로 업로드한다.
+  // 새로 첨부된 파일이 있으면 data.json을 쓰기 전에 먼저 저장된 경로(filePath)에 실제로 업로드한다.
+  // filePath는 재첨부해도 항상 같은 값이라 URL(QR코드·북마크 포함)이 유지된다.
   for (const p of adminCurrentProjects) {
-    if (!p._pendingFileContent) continue;
+    if (p._pendingFileContent) {
+      const path = p.filePath || `${GH_FILES_DIR}/${p.fileName}`;
+      try {
+        btn.textContent = `파일 업로드 중... (${p.fileName})`;
+        p.fileUrl = await ghPutTextFile(path, p._pendingFileContent, token, `Upload attachment: ${p.fileName}`);
+        p.filePath = path;
+        delete p._pendingFileContent;
+      } catch (e) {
+        btn.textContent = `파일 업로드 실패: ${e.message}`; btn.disabled = false;
+        setTimeout(() => { btn.textContent = '저장'; }, 3000);
+        return;
+      }
+    }
+    if (p._pendingThumbContent) {
+      try {
+        btn.textContent = `썸네일 업로드 중... (${p.title})`;
+        p.thumbUrl = await ghPutImageFile(`images/thumb-${Date.now()}-${Math.random().toString(36).slice(2,7)}.jpg`, p._pendingThumbContent, token, `Upload thumbnail: ${p.title}`);
+        delete p._pendingThumbContent;
+      } catch (e) {
+        btn.textContent = `썸네일 업로드 실패: ${e.message}`; btn.disabled = false;
+        setTimeout(() => { btn.textContent = '저장'; }, 3000);
+        return;
+      }
+    }
+  }
+
+  // 히어로 아바타 이미지 업로드
+  if (_pendingAvatarFile) {
     try {
-      btn.textContent = `파일 업로드 중... (${p.fileName})`;
-      p.fileUrl = await ghPutFile(`${GH_FILES_DIR}/${p.fileName}`, p._pendingFileContent, token, `Upload attachment: ${p.fileName}`);
-      delete p._pendingFileContent;
+      btn.textContent = '아바타 업로드 중...';
+      currentHeroAvatarUrl = await ghPutImageFile(`images/avatar-${Date.now()}.jpg`, _pendingAvatarFile, token, 'Update avatar');
+      renderHeroAvatar(currentHeroAvatarUrl);
+      _pendingAvatarFile = null;
     } catch (e) {
-      btn.textContent = `파일 업로드 실패: ${e.message}`; btn.disabled = false;
+      btn.textContent = `아바타 업로드 실패: ${e.message}`; btn.disabled = false;
       setTimeout(() => { btn.textContent = '저장'; }, 3000);
       return;
     }
@@ -2625,6 +2936,7 @@ async function adminSave() {
     footer_badges:   JSON.stringify([...document.querySelectorAll('.footer-badge')].map(e => e.textContent.trim())),
     stats_items:     JSON.stringify([...document.querySelectorAll('.stat-card')].map(c => ({ num: c.querySelector('.stat-num')?.getAttribute('data-target') || '', suffix: c.querySelector('.stat-num')?.getAttribute('data-suffix') || '', label: c.querySelector('.stat-label')?.textContent.trim() || '' }))),
     faq_items:       JSON.stringify([...document.querySelectorAll('#faqList .faq-item')].map(item => ({ q: item.querySelector('.faq-q span')?.textContent.trim() || '', a: item.querySelector('.faq-a')?.textContent.trim() || '' }))),
+    hero_avatar_url: currentHeroAvatarUrl || '',
   };
 
   const careerItems = [...document.querySelectorAll('#careerList .career-item')].map(el => ({

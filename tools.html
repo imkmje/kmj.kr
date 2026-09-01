@@ -385,6 +385,24 @@ body {
     </div>
   </div>
 
+  <!-- Site Meta -->
+  <div class="tool-card">
+    <h3>사이트 메타정보</h3>
+    <p class="card-desc">브라우저 탭 제목과 카카오톡·트위터 등 링크 공유 시 미리보기에 쓰이는 정보입니다. data.json이 아니라 index.html 원본을 직접 고쳐야 실제로 반영되므로 별도 버튼으로 저장합니다.</p>
+    <div class="flags-ticker-field">
+      <div class="flags-ticker-label">사이트 제목</div>
+      <input type="text" id="meta-title" class="flags-ticker-input" placeholder="예: KMJ 수업 공간" oninput="_metaDirty=true">
+    </div>
+    <div class="flags-ticker-field">
+      <div class="flags-ticker-label">사이트 설명</div>
+      <input type="text" id="meta-desc" class="flags-ticker-input" placeholder="검색결과·링크 미리보기에 표시될 한 줄 설명" oninput="_metaDirty=true">
+    </div>
+    <div class="flags-footer">
+      <span class="hint" id="metaHint" style="margin-right:auto;"></span>
+      <button id="saveMetaBtn" onclick="saveMeta()">GitHub에 저장</button>
+    </div>
+  </div>
+
   <!-- Short Links -->
   <div class="tool-card">
     <h3>링크 단축</h3>
@@ -410,7 +428,8 @@ const GH_OWNER  = 'imkmje';
 const GH_REPO   = 'kmj.kr';
 const GH_FILE   = 'data.json';
 const GH_BRANCH = 'main';
-const GH_API    = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+const GH_API       = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+const GH_API_INDEX = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/index.html`;
 
 /* ── utils ── */
 function hashPw(s) {
@@ -585,6 +604,7 @@ document.getElementById('lf-url').addEventListener('keydown', e => {
 /* ── feature flags ── */
 let _flagsDirty = false;
 let _linksDirty = false;
+let _metaDirty  = false;
 const FLAG_IDS = ['showTicker', 'showContactModal', 'enableSearchFilter', 'enableSkeletonUI', 'showStats', 'enableQRCode', 'enableBookmark', 'showFAQ'];
 
 function onFlagChange() { _flagsDirty = true; }
@@ -655,6 +675,92 @@ async function saveFlags() {
   }
 }
 
+/* ── 사이트 메타정보 ──
+   카카오톡·트위터 등 링크 미리보기 크롤러는 JS를 실행하지 않고 원본 HTML의 <title>/<meta>를
+   그대로 읽으므로, data.json이 아니라 index.html 소스 자체를 고쳐야 실제로 반영된다. */
+function escapeHtmlAttr(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function dollarSafe(str) { return str.replace(/\$/g, '$$$$'); } // String.replace 치환문에서 $가 특수기호로 해석되는 것 방지
+
+const META_PATTERNS = {
+  title:   /(<title>)([^<]*)(<\/title>)/,
+  desc:    /(<meta name="description" content=")([^"]*)(")/,
+  ogTitle: /(<meta property="og:title"\s+content=")([^"]*)(")/,
+  ogDesc:  /(<meta property="og:description" content=")([^"]*)(")/,
+  twTitle: /(<meta name="twitter:title" content=")([^"]*)(")/,
+  twDesc:  /(<meta name="twitter:description" content=")([^"]*)(")/,
+};
+
+async function fetchIndexHtml() {
+  const res = await fetch(GH_API_INDEX + '?t=' + Date.now(), {
+    headers: { Accept: 'application/vnd.github.v3.raw' },
+    cache: 'no-store'
+  });
+  if (!res.ok) throw new Error('index.html GET ' + res.status);
+  return res.text();
+}
+
+async function loadMeta() {
+  try {
+    const html = await fetchIndexHtml();
+    const t = html.match(META_PATTERNS.title);
+    const d = html.match(META_PATTERNS.desc);
+    if (t) document.getElementById('meta-title').value = t[2];
+    if (d) document.getElementById('meta-desc').value = d[2];
+  } catch (e) {
+    document.getElementById('metaHint').textContent = '불러오기 실패: ' + e.message;
+    document.getElementById('metaHint').style.color = 'var(--red)';
+  }
+}
+
+async function saveMeta() {
+  const token = getToken();
+  if (!token) { alert('토큰을 먼저 설정하세요.'); return; }
+  const title = document.getElementById('meta-title').value.trim();
+  const desc  = document.getElementById('meta-desc').value.trim();
+  if (!title || !desc) { alert('제목과 설명을 모두 입력해 주세요.'); return; }
+
+  const btn = document.getElementById('saveMetaBtn');
+  btn.textContent = '저장 중…'; btn.disabled = true;
+
+  const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+  try {
+    const getRes = await fetch(GH_API_INDEX, { headers, cache: 'no-store' });
+    if (!getRes.ok) throw new Error(`GET ${getRes.status}`);
+    const meta = await getRes.json();
+    const sha  = meta.sha;
+    const html = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
+
+    const rTitle = dollarSafe(escapeHtmlAttr(title));
+    const rDesc  = dollarSafe(escapeHtmlAttr(desc));
+    const replacements = [
+      [META_PATTERNS.title,   `$1${rTitle}$3`],
+      [META_PATTERNS.desc,    `$1${rDesc}$3`],
+      [META_PATTERNS.ogTitle, `$1${rTitle}$3`],
+      [META_PATTERNS.ogDesc,  `$1${rDesc}$3`],
+      [META_PATTERNS.twTitle, `$1${rTitle}$3`],
+      [META_PATTERNS.twDesc,  `$1${rDesc}$3`],
+    ];
+    let newHtml = html;
+    for (const [re, rep] of replacements) {
+      if (!re.test(newHtml)) throw new Error('사이트 파일 구조가 예상과 달라 저장하지 못했습니다');
+      newHtml = newHtml.replace(re, rep);
+    }
+
+    const payload = { message: 'Update site meta', branch: GH_BRANCH, sha, content: btoa(unescape(encodeURIComponent(newHtml))) };
+    const putRes = await fetch(GH_API_INDEX, { method: 'PUT', headers, body: JSON.stringify(payload) });
+    if (!putRes.ok) { const e = await putRes.json(); throw new Error(e.message || putRes.status); }
+
+    btn.textContent = '저장됨 ✓'; _metaDirty = false;
+    document.getElementById('metaHint').textContent = '';
+    setTimeout(() => { btn.textContent = 'GitHub에 저장'; btn.disabled = false; }, 2000);
+  } catch (e) {
+    btn.textContent = `실패: ${e.message}`; btn.disabled = false;
+    setTimeout(() => { btn.textContent = 'GitHub에 저장'; }, 3000);
+  }
+}
+
 /* ── init ── */
 async function initTools() {
   updateTokenStatus();
@@ -663,6 +769,7 @@ async function initTools() {
 
 async function loadData() {
   await loadLinks();
+  await loadMeta();
 }
 
 const CACHE_KEY = 'kmj_cache_v1';
@@ -713,7 +820,7 @@ async function loadLinks() {
 
 /* ── 미저장 이탈 경고 ── */
 window.addEventListener('beforeunload', e => {
-  if (_flagsDirty || _linksDirty) { e.preventDefault(); e.returnValue = ''; }
+  if (_flagsDirty || _linksDirty || _metaDirty) { e.preventDefault(); e.returnValue = ''; }
 });
 
 /* ── 이미 로그인 상태면 비밀번호 건너뜀 ── */

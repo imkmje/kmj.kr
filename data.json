@@ -82,7 +82,11 @@
         "JavaScript",
         "Canvas"
       ],
-      "link": "https://kmj.kr/presenter.html"
+      "link": "",
+      "hasFile": true,
+      "fileName": "presenter.html",
+      "filePath": "presenter.html",
+      "fileUrl": "presenter.html"
     },
     {
       "title": "학급 좌석 배정 시스템",
