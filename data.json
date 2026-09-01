@@ -26,7 +26,7 @@
     "faq_title": "자주 묻는 질문",
     "hero_badges": "[\"Google Certified Trainer\",\"AI 활용 선도교사 연수 이수\"]",
     "footer_badges": "[\"Google Certified Trainer\",\"AI 활용 선도교사\"]",
-    "stats_items": "[{\"num\":\"5\",\"suffix\":\"+\",\"label\":\"개발된 도구\"}]",
+    "stats_items": "[{\"num\":\"5\",\"suffix\":\"+\",\"label\":\"개발된 도구\"},{\"num\":\"0\",\"suffix\":\"\",\"label\":\"새 항목\"}]",
     "faq_items": "[{\"q\":\"도구를 어떻게 사용할 수 있나요?\",\"a\":\"링크가 있는 도구는 카드를 클릭하면 바로 이동합니다. 일부 도구는 개발 중이거나 교내 전용이라 링크가 없을 수 있어요.\"},{\"q\":\"학교 현장 외에도 활용 가능한가요?\",\"a\":\"GAS 기반 도구는 Google Workspace 환경이면 어디서나 배포 가능합니다. 도입 문의는 연락 섹션을 이용해 주세요.\"},{\"q\":\"Google Certified Trainer란 어떤 자격인가요?\",\"a\":\"Google이 공식 인증하는 에듀케이터 트레이너 자격으로, Google Workspace for Education 도구를 교사·학생에게 효과적으로 가르칠 수 있음을 인증합니다.\"},{\"q\":\"도구 개발 협업이나 문의는 어떻게 하나요?\",\"a\":\"연락 섹션의 '문의하기' 버튼을 클릭하거나 이메일로 직접 연락 주세요. 교육 현장에서 필요한 도구라면 함께 만들어 볼 수 있습니다.\"}]",
     "hero_avatar_url": "images/avatar-1788225405397.jpg",
     "career": "[{\"year\":\"2026\",\"title\":\"인공지능 활용 선도교사 연수 대상자\"},{\"year\":\"2026\",\"title\":\"Google Certified Trainer 취득\"},{\"year\":\"2023~\",\"title\":\"고등학교 국어 교사\"}]",
