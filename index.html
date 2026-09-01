@@ -1535,9 +1535,28 @@ const GH_BRANCH = 'main';
 const GH_FILE   = 'data.json';
 const GH_RAW    = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}`;
 const GH_API    = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+const GH_FILES_DIR = 'files';
 
 function getToken() { return localStorage.getItem('kmjkr_gh_token') || ''; }
 function setToken(t) { t ? localStorage.setItem('kmjkr_gh_token', t) : localStorage.removeItem('kmjkr_gh_token'); }
+
+function b64utf8(str) { return btoa(unescape(encodeURIComponent(str))); }
+
+/* 관리자 첨부파일을 실제로 저장소(files/)에 업로드 → 성공 시 사이트 어디서나 열리는 상대경로 반환 */
+async function ghPutFile(relPath, content, token, message) {
+  const encPath = encodeURI(relPath);
+  const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${encPath}`;
+  const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+  let sha;
+  const getRes = await fetch(url, { headers, cache: 'no-store' });
+  if (getRes.ok) sha = (await getRes.json()).sha;
+  else if (getRes.status !== 404) throw new Error(`GET ${relPath} ${getRes.status}`);
+  const body = { message, branch: GH_BRANCH, content: b64utf8(content) };
+  if (sha) body.sha = sha;
+  const putRes = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
+  if (!putRes.ok) { const e = await putRes.json(); throw new Error(e.message || putRes.status); }
+  return encPath;
+}
 
 const FALLBACK_ABOUT = [
   {
@@ -1886,7 +1905,11 @@ function openModal(p) {
   document.getElementById('modalTags').innerHTML     = normTags(p.tags).map(t => `<span class="tag blue">${t}</span>`).join('');
   const link = document.getElementById('modalLink');
   if (link._blobUrl) { URL.revokeObjectURL(link._blobUrl); link._blobUrl = null; }
-  if (p.hasFile) {
+  if (p.fileUrl) {
+    // 관리자 모드에서 저장소(files/)에 실제로 업로드된 첨부파일 — 모든 기기에서 동일하게 열림
+    link.href = p.fileUrl; link.className = 'modal-link'; link.textContent = p.title + ' 열기 →';
+  } else if (p.hasFile) {
+    // 예전 방식(브라우저 로컬 저장)으로 첨부된 항목의 잔재 — 같은 기기에서만 열림
     const fc = localStorage.getItem('kmjkr_pfile_' + p.title);
     if (fc) {
       const blob = new Blob([fc], { type: 'text/html' });
@@ -1896,7 +1919,7 @@ function openModal(p) {
       link.className = 'modal-link';
       link.textContent = p.title + ' 열기 →';
     } else {
-      link.href = '#'; link.className = 'modal-link disabled'; link.textContent = '파일 없음 (다른 기기)';
+      link.href = '#'; link.className = 'modal-link disabled'; link.textContent = '파일 없음 (관리자 모드에서 다시 첨부해 주세요)';
     }
   } else if (p.link) {
     link.href = p.link; link.className = 'modal-link'; link.textContent = '앱 열기 →';
@@ -2223,7 +2246,9 @@ function openAdminModal(title, p) {
   document.getElementById('af-link').value   = p.link || '';
   document.getElementById('af-file').value   = '';
   document.getElementById('af-file-text').textContent = '파일 선택...';
-  document.getElementById('af-file-name').textContent = p.fileName ? `현재 파일: ${p.fileName}` : '';
+  document.getElementById('af-file-name').textContent = p.fileName
+    ? `현재 파일: ${p.fileName}${p.fileUrl ? '' : ' (업로드 안 됨 — 다시 첨부 후 저장해 주세요)'}`
+    : '';
   document.getElementById('adminModal').classList.add('open');
 }
 function adminFileChange(input) {
@@ -2253,17 +2278,10 @@ function adminModalConfirm() {
       link:        document.getElementById('af-link').value,
       hasFile:     fileInfo.hasFile,
       fileName:    fileInfo.fileName || null,
+      fileUrl:     fileInfo.content ? null : (existing?.fileUrl || null), // 새 파일 선택 시 업로드 전까지 비움
     };
-    if (fileInfo.content) {
-      try { localStorage.setItem('kmjkr_pfile_' + p.title, fileInfo.content); } catch {}
-    }
-    if (existing?.hasFile && existing.title !== p.title) {
-      const old = localStorage.getItem('kmjkr_pfile_' + existing.title);
-      if (old) {
-        try { localStorage.setItem('kmjkr_pfile_' + p.title, old); } catch {}
-        localStorage.removeItem('kmjkr_pfile_' + existing.title);
-      }
-    }
+    // 새로 선택한 파일 내용은 '저장' 클릭 시 adminSave()가 실제로 GitHub(files/)에 업로드한다.
+    if (fileInfo.content) p._pendingFileContent = fileInfo.content;
     if (adminEditingIdx >= 0) adminCurrentProjects[adminEditingIdx] = p;
     else adminCurrentProjects.push(p);
     markDirty();
@@ -2571,6 +2589,21 @@ async function adminSave() {
 
   const btn = document.querySelector('.admin-save-btn');
   btn.textContent = '저장 중...'; btn.disabled = true;
+
+  // 새로 첨부된 파일이 있으면 data.json을 쓰기 전에 먼저 files/ 에 실제로 업로드한다.
+  for (const p of adminCurrentProjects) {
+    if (!p._pendingFileContent) continue;
+    try {
+      btn.textContent = `파일 업로드 중... (${p.fileName})`;
+      p.fileUrl = await ghPutFile(`${GH_FILES_DIR}/${p.fileName}`, p._pendingFileContent, token, `Upload attachment: ${p.fileName}`);
+      delete p._pendingFileContent;
+    } catch (e) {
+      btn.textContent = `파일 업로드 실패: ${e.message}`; btn.disabled = false;
+      setTimeout(() => { btn.textContent = '저장'; }, 3000);
+      return;
+    }
+  }
+  btn.textContent = '저장 중...';
 
   const contactBtn = document.getElementById('contactBtn');
   const txt = (sel) => document.querySelector(sel)?.textContent.trim() || '';
