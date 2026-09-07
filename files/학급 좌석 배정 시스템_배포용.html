@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light" data-design="flatinium">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>좌석 배정 시스템</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* =========================================
+       [Flatinium Design System - Root Variables]
+       ========================================= */
+    :root {
+      --flat-bg: #eaedf2;
+      --flat-surface: #ffffff;
+      --flat-surface-hover: #f3f5f8;
+      --surface-grad-1: #ffffff;
+      --surface-grad-2: #f0f2f5;
+      --ti-border: rgba(0, 0, 0, 0.12);
+      --ti-border-hi: rgba(0, 0, 0, 0.25);
+      --ti-edge-hi: rgba(255, 255, 255, 0.9);
+      --ti-text: #1a1d21;
+      --ti-text-muted: #646a78;
+      --ti-accent: #0d9488;
+      --ti-accent-hover: #0f766e;
+      --ti-accent-dim: rgba(13, 148, 136, 0.1);
+      --ti-success: #10b981;
+      --ti-warning: #f59e0b;
+      --ti-danger: #ef4444;
+      --ti-shimmer: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%);
+      --ti-track-bg: #d8dce4;
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --ti-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    html[data-theme="dark"][data-design="flatinium"] {
+      --flat-bg: #090a0d;
+      --flat-surface: #1a1c23;
+      --flat-surface-hover: #22252d;
+      --surface-grad-1: #1f222a;
+      --surface-grad-2: #14161b;
+      --ti-border: rgba(255, 255, 255, 0.12);
+      --ti-border-hi: rgba(255, 255, 255, 0.25);
+      --ti-edge-hi: rgba(255, 255, 255, 0.08);
+      --ti-text: #f0f2f5;
+      --ti-text-muted: #9ba1ad;
+      --ti-accent: #2dd4bf;
+      --ti-accent-hover: #5eead4;
+      --ti-accent-dim: rgba(45, 212, 191, 0.1);
+      --ti-shimmer: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0) 100%);
+      --ti-track-bg: #0f1115;
+    }
+
+    /* =========================================
+       [Glace UI V5 - Pure Glass Edition]
+       ========================================= */
+    html[data-design="glace"] {
+      --bg: #E8EDF4;
+      --gl-base: rgba(255, 255, 255, 0.25);
+      --bl-base: blur(28px) saturate(140%);
+      --gl-edge: inset 1px 1px 1px rgba(255,255,255,0.9), inset -1px -1px 2px rgba(146,168,209,0.1), 0 20px 40px rgba(20, 30, 50, 0.08);
+      --gl-edge-hv: inset 1px 1px 1px rgba(255,255,255,1), inset -1px -1px 2px rgba(146,168,209,0.1), 0 30px 60px rgba(20, 30, 50, 0.12);
+      --ac: #849BC4; --ac-hi: #A0B4DA; --ac-hv: #6A85B6;
+      --ac-gw: rgba(132,155,196,0.35);
+      --btn-gl: rgba(255, 255, 255, 0.45); --btn-gl-hv: rgba(255, 255, 255, 0.7);
+      --btn-p-bg: rgba(132, 155, 196, 0.9); --btn-p-hv: rgba(110, 135, 180, 1);
+      --btn-edge: inset 0 1px 1px rgba(255,255,255,0.5), 0 4px 12px rgba(0,0,0,0.05);
+      --gl-in: rgba(215, 225, 240, 0.4);
+      --dn: inset 0 2px 6px rgba(30,40,60,.12), inset 0 0 0 1px rgba(255,255,255,0.5);
+      --t1: #151A22; --t2: #4A5568; --t3: #718096;
+      --ez: cubic-bezier(0.16, 1, 0.3, 1);
+      --ez-i: cubic-bezier(0.3, 0, 0.8, 0.15);
+      --r-m: 16px; --r-l: 32px; --r-pill: 9999px;
+
+      /* Glace aliases for legacy selectors */
+      --flat-bg: #E8EDF4;
+      --flat-surface: rgba(255,255,255,0.25);
+      --flat-surface-hover: rgba(255,255,255,0.45);
+      --surface-grad-1: rgba(255,255,255,0.25);
+      --surface-grad-2: rgba(255,255,255,0.15);
+      --ti-border: rgba(255,255,255,0.3);
+      --ti-border-hi: rgba(255,255,255,0.6);
+      --ti-edge-hi: rgba(255,255,255,0.9);
+      --ti-text: #151A22; --ti-text-muted: #4A5568;
+      --ti-accent: #849BC4; --ti-accent-hover: #6A85B6;
+      --ti-accent-dim: rgba(132,155,196,0.15);
+      --ti-danger: #ef4444;
+      --ti-warning: #f59e0b;
+      --ti-track-bg: rgba(215, 225, 240, 0.4);
+      --radius-sm: 12px; --radius-md: 16px; --radius-lg: 32px;
+      --ti-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    html[data-design="glace"][data-theme="dark"] {
+      --bg: #0B0F17;
+      --gl-base: rgba(255, 255, 255, 0.04);
+      --bl-base: blur(28px) saturate(120%);
+      --gl-edge: inset 1px 1px 1px rgba(255,255,255,0.15), inset -1px -1px 1px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4);
+      --gl-edge-hv: inset 1px 1px 1px rgba(255,255,255,0.25), inset -1px -1px 1px rgba(0,0,0,0.6), 0 30px 60px rgba(0,0,0,0.6);
+      --ac: #A0B4DA; --ac-hv: #89A0CB; --ac-gw: rgba(160,180,218,0.25);
+      --btn-gl: rgba(255,255,255,0.08); --btn-gl-hv: rgba(255,255,255,0.15);
+      --btn-p-bg: rgba(100,125,170,0.8); --btn-p-hv: rgba(85,110,155,0.9);
+      --btn-edge: inset 0 1px 1px rgba(255,255,255,0.15), 0 4px 12px rgba(0,0,0,0.2);
+      --gl-in: rgba(0,0,0,0.3);
+      --dn: inset 0 2px 6px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,0.05);
+      --t1: #F7FAFC; --t2: #A0AEC0; --t3: #718096;
+
+      --flat-bg: #0B0F17;
+      --flat-surface: rgba(255,255,255,0.04);
+      --flat-surface-hover: rgba(255,255,255,0.08);
+      --surface-grad-1: rgba(255,255,255,0.04);
+      --surface-grad-2: rgba(255,255,255,0.02);
+      --ti-border: rgba(255,255,255,0.1);
+      --ti-border-hi: rgba(255,255,255,0.2);
+      --ti-text: #F7FAFC; --ti-text-muted: #A0AEC0;
+      --ti-accent: #A0B4DA; --ti-accent-hover: #89A0CB;
+      --ti-accent-dim: rgba(160,180,218,0.15);
+      --ti-track-bg: rgba(0,0,0,0.3);
+    }
+
+    /* =========================================
+       [Global Reset & Base]
+       ========================================= */
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      background-color: var(--flat-bg);
+      color: var(--ti-text);
+      font-family: 'Noto Sans KR', sans-serif;
+      transition: background-color 0.4s var(--ti-ease), color 0.3s var(--ti-ease);
+      display: flex;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* =========================================
+       [Glace Background Scene]
+       ========================================= */
+    .bg-scene {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    html[data-design="glace"] .bg-scene { opacity: 1; }
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(100px); opacity: 0.55;
+    }
+    .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, #c7d4f0 0%, #b8cae8 60%, transparent 100%); top: -150px; left: -100px; animation: drift1 18s ease-in-out infinite; }
+    .orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, #f0d4e0 0%, #e8c8d4 60%, transparent 100%); bottom: -100px; right: -80px; animation: drift2 22s ease-in-out infinite; }
+    .orb-3 { width: 400px; height: 400px; background: radial-gradient(circle, #d4e0f5 0%, #c8d8f0 60%, transparent 100%); top: 40%; left: 40%; animation: drift3 25s ease-in-out infinite; }
+    @keyframes drift1 { 0%,100%{transform:translate(0,0)} 33%{transform:translate(60px,40px)} 66%{transform:translate(-30px,60px)} }
+    @keyframes drift2 { 0%,100%{transform:translate(0,0)} 33%{transform:translate(-50px,-40px)} 66%{transform:translate(40px,-60px)} }
+    @keyframes drift3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-60px,50px)} }
+
+    /* =========================================
+       [Flatinium UI Components]
+       ========================================= */
+    .ti-card {
+      background: linear-gradient(145deg, var(--surface-grad-1) 0%, var(--surface-grad-2) 100%);
+      border: 1px solid var(--ti-border);
+      border-radius: var(--radius-md);
+      position: relative;
+      overflow: hidden;
+    }
+    .ti-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--ti-edge-hi), transparent);
+      pointer-events: none;
+    }
+    html[data-design="glace"] .ti-card {
+      background: var(--gl-base);
+      backdrop-filter: var(--bl-base);
+      -webkit-backdrop-filter: var(--bl-base);
+      box-shadow: var(--gl-edge);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    html[data-design="glace"] .ti-card::before { display: none; }
+
+    .ti-input {
+      background: var(--ti-track-bg);
+      border: 1px solid transparent;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
+      border-radius: var(--radius-sm);
+      color: var(--ti-text);
+      padding: 10px 14px;
+      font-family: inherit;
+      width: 100%;
+      transition: border 0.2s var(--ti-ease), box-shadow 0.2s var(--ti-ease);
+    }
+    .ti-input:focus {
+      border-color: var(--ti-accent);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.15), 0 0 0 2px var(--ti-accent-dim);
+      outline: none;
+    }
+    html[data-design="glace"] .ti-input {
+      background: var(--gl-in);
+      box-shadow: var(--dn);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    html[data-design="glace"] .ti-input:focus {
+      border-color: var(--ac);
+      box-shadow: var(--dn), 0 0 0 2px var(--ac-gw, rgba(132,155,196,0.2));
+    }
+
+    .ti-btn {
+      background: linear-gradient(145deg, var(--surface-grad-1), var(--surface-grad-2));
+      border: 1px solid var(--ti-border);
+      border-radius: var(--radius-md);
+      color: var(--ti-text);
+      padding: 8px 14px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s var(--ti-ease);
+      user-select: none;
+      position: relative;
+    }
+    .ti-btn::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--ti-edge-hi), transparent);
+      border-radius: var(--radius-md) var(--radius-md) 0 0;
+    }
+    .ti-btn:hover { background: var(--flat-surface-hover); }
+    .ti-btn:active { transform: scale(0.96); }
+    .ti-btn.primary { border-color: var(--ti-accent); color: var(--ti-accent); }
+    .ti-btn.primary:hover { box-shadow: 0 0 16px var(--ti-accent-dim); }
+    .ti-btn.warning { background: var(--ti-warning); border-color: var(--ti-warning); color: #fff; }
+    .ti-btn.warning:hover { box-shadow: 0 0 16px rgba(245,158,11,0.3); }
+
+    html[data-design="glace"] .ti-btn {
+      background: var(--btn-gl);
+      border: 1px solid rgba(255,255,255,0.45);
+      border-radius: var(--r-pill);
+      box-shadow: var(--btn-edge);
+      color: var(--t1);
+    }
+    html[data-design="glace"] .ti-btn::before { display: none; }
+    html[data-design="glace"] .ti-btn:hover { background: var(--btn-gl-hv); transform: translateY(-2px); box-shadow: var(--gl-edge-hv); }
+    html[data-design="glace"] .ti-btn:active { transform: scale(0.96) translateY(0) !important; box-shadow: var(--dn) !important; }
+    html[data-design="glace"] .ti-btn.primary { background: var(--btn-p-bg); color: #fff; border-color: rgba(255,255,255,0.3); }
+    html[data-design="glace"] .ti-btn.primary:hover { background: var(--btn-p-hv); }
+    html[data-design="glace"] .ti-btn.warning { border-radius: var(--r-pill); }
+
+    .ti-toggle-wrap {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0; border-bottom: 1px solid var(--ti-border);
+    }
+    .ti-toggle {
+      width: 44px; height: 24px;
+      background: var(--ti-track-bg);
+      border-radius: 12px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+      position: relative; cursor: pointer;
+      transition: background 0.3s var(--ti-ease);
+    }
+    .ti-toggle.active { background: var(--ti-accent); }
+    .ti-toggle-knob {
+      width: 20px; height: 20px;
+      background: linear-gradient(145deg, var(--surface-grad-1), var(--surface-grad-2));
+      border-radius: 50%;
+      position: absolute; top: 2px; left: 2px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: transform 0.3s var(--ti-ease);
+    }
+    .ti-toggle.active .ti-toggle-knob { transform: translateX(20px); }
+    html[data-design="glace"] .ti-toggle {
+      background: var(--gl-in);
+      box-shadow: var(--dn);
+    }
+    html[data-design="glace"] .ti-toggle.active { background: var(--ac); box-shadow: 0 0 12px var(--ac-gw); }
+    html[data-design="glace"] .ti-toggle-knob {
+      background: rgba(255,255,255,0.9);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.8);
+    }
+
+    /* =========================================
+       [Layout]
+       ========================================= */
+    .app-wrapper {
+      position: relative; z-index: 1;
+      display: flex; width: 100%; height: 100%;
+    }
+    .sidebar {
+      width: 320px; min-width: 320px;
+      background: var(--flat-bg);
+      border-right: 1px solid var(--ti-border);
+      display: flex; flex-direction: column;
+      padding: 16px 20px; gap: 12px;
+      overflow-y: auto;
+      z-index: 10;
+      transition: background 0.4s, border-color 0.4s;
+    }
+    html[data-design="glace"] .sidebar {
+      background: transparent;
+      border-right: 1px solid rgba(255,255,255,0.2);
+    }
+    .main-content {
+      flex: 1; display: flex; flex-direction: column;
+      position: relative;
+      background: var(--flat-bg);
+      transition: background 0.4s;
+    }
+    html[data-design="glace"] .main-content { background: transparent; }
+    .header {
+      padding: 16px 32px;
+      display: flex; justify-content: flex-end; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--ti-border);
+      transition: border-color 0.4s;
+    }
+    html[data-design="glace"] .header { border-bottom: 1px solid rgba(255,255,255,0.2); }
+    .board-area {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 40px; overflow: auto;
+    }
+
+    /* =========================================
+       [Canvas & Free Drag Grid]
+       ========================================= */
+    .canvas-board {
+      position: relative;
+      width: 1000px; height: 700px;
+      background: transparent;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--ti-border);
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.05);
+      transition: transform 0.6s var(--ti-ease), border-color 0.4s;
+    }
+    html[data-design="glace"] .canvas-board {
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: inset 0 0 60px rgba(132,155,196,0.05), 0 0 80px rgba(132,155,196,0.05);
+      backdrop-filter: blur(4px);
+    }
+    .canvas-board.rotated { transform: rotate(180deg); }
+
+    .teacher-desk {
+      position: absolute;
+      top: 20px; left: 50%; transform: translateX(-50%);
+      width: 200px; height: 60px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1.2rem; letter-spacing: 4px;
+      color: var(--ti-text-muted);
+      border-radius: var(--radius-sm);
+      transition: transform 0.6s var(--ti-ease);
+      user-select: none; pointer-events: none;
+      background: var(--flat-bg);
+    }
+    html[data-design="glace"] .teacher-desk {
+      background: var(--gl-base);
+      box-shadow: var(--gl-edge);
+      backdrop-filter: var(--bl-base);
+    }
+    .canvas-board.rotated .teacher-desk { transform: translateX(-50%) rotate(180deg); }
+
+    .desk {
+      position: absolute;
+      width: 100px; height: 60px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: 1.05rem;
+      border-radius: var(--radius-sm);
+      cursor: grab;
+      transition: all 0.2s var(--ti-ease), transform 0.6s var(--ti-ease);
+      user-select: none; touch-action: none;
+      -webkit-touch-callout: none; -webkit-user-drag: none;
+    }
+    .desk:active { cursor: grabbing; }
+    .canvas-board.rotated .desk { transform: rotate(180deg); }
+    .desk:hover { background: var(--flat-surface-hover); }
+    .desk.empty { color: var(--ti-text-muted); opacity: 0.6; }
+    .desk.pre-assigned { border-color: var(--ti-accent); color: var(--ti-text); }
+    .desk.pre-assigned::after { content: '🔒'; position: absolute; top: 4px; right: 4px; font-size: 0.6rem; opacity: 0.7; }
+    .desk.drag-over { border: 2px solid var(--ti-accent); box-shadow: 0 0 16px var(--ti-accent-dim); }
+    .desk.shuffling { border-color: var(--ti-accent); color: var(--ti-accent); text-shadow: 0 0 10px var(--ti-accent-dim); box-shadow: inset 0 0 0 1px var(--ti-accent); }
+    .desk.assigned { color: var(--ti-text); animation: popIn 0.4s var(--ti-ease) forwards; }
+    @keyframes popIn {
+      0% { transform: scale(1); border-color: var(--ti-accent); box-shadow: 0 0 16px var(--ti-accent-dim); }
+      50% { transform: scale(1.1); background: var(--ti-accent); color: var(--flat-bg); }
+      100% { transform: scale(1); border-color: var(--ti-border); background: linear-gradient(145deg, var(--surface-grad-1), var(--surface-grad-2)); }
+    }
+    html[data-design="glace"] .desk.assigned { animation: popInGlace 0.4s var(--ez, var(--ti-ease)) forwards; }
+    @keyframes popInGlace {
+      0% { transform: scale(1); box-shadow: 0 0 20px var(--ac-gw); }
+      50% { transform: scale(1.1); background: var(--ac); color: #fff; box-shadow: 0 0 30px var(--ac-gw); }
+      100% { transform: scale(1); background: var(--gl-base); box-shadow: var(--gl-edge); }
+    }
+    .canvas-board.rotated .desk.assigned { animation: popInRotated 0.4s var(--ti-ease) forwards; }
+    @keyframes popInRotated {
+      0% { transform: rotate(180deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.1); background: var(--ti-accent); color: var(--flat-bg); }
+      100% { transform: rotate(180deg) scale(1); }
+    }
+    .canvas-board.delete-mode .desk { cursor: pointer; }
+    .canvas-board.delete-mode .desk:hover { background: rgba(239,68,68,0.1); border-color: var(--ti-danger); color: var(--ti-danger); }
+    #toggleDeleteMode.active { background: var(--ti-danger); }
+
+    /* 비밀 선배정 표시: '비밀 선배정 모드'가 켜져 있을 때, 교사에게만 보이는 힌트.
+       이 모드를 끄면(수업 시작 전) 학생에게는 일반 빈 자리와 완전히 동일하게 보임. */
+    .canvas-board.secret-assign-mode .desk.secret-armed {
+      border: 2px dashed var(--ti-accent) !important;
+      box-shadow: 0 0 10px var(--ti-accent-dim);
+    }
+
+    /* =========================================
+       [Dialog & Toast]
+       ========================================= */
+    dialog { margin: auto; padding: 0; border: none; background: transparent; outline: none; }
+    dialog::backdrop { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+    .modal-content { width: 300px; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+    .student-list-ui { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; padding-right: 4px; }
+    .student-row { padding: 10px 12px; border-bottom: 1px solid var(--ti-border); cursor: pointer; transition: background 0.2s var(--ti-ease); border-radius: var(--radius-sm); }
+    .student-row:hover { background: var(--flat-surface-hover); color: var(--ti-accent); }
+    #ti-toast {
+      position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%);
+      padding: 12px 24px; z-index: 9999;
+      background: var(--ti-text); color: var(--flat-bg);
+      border-radius: var(--radius-lg); font-weight: 500; font-size: 0.95rem;
+      transition: bottom 0.4s var(--ti-ease); box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    html[data-design="glace"] #ti-toast {
+      background: var(--gl-base);
+      backdrop-filter: var(--bl-base);
+      box-shadow: var(--gl-edge);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: var(--t1);
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--ti-track-bg); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--ti-border-hi); border-radius: 3px; }
+
+    /* =========================================
+       [Sidebar Form Controls]
+       ========================================= */
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+    .form-group label { font-size: 0.8rem; color: var(--ti-text-muted); font-weight: 500; }
+    .grid-inputs { display: flex; gap: 8px; }
+    textarea.ti-input { resize: vertical; min-height: 80px; line-height: 1.4; font-size: 0.9rem; }
+    .button-group { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding-bottom: 20px; }
+    .header-title { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
+
+    /* =========================================
+       [Settings Modal]
+       ========================================= */
+    #settingsModal .modal-content {
+      width: 640px; max-width: 95vw;
+      padding: 36px 40px;
+      display: flex; flex-direction: column; gap: 28px;
+    }
+    .settings-header {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .settings-title {
+      font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .settings-icon-wrap {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: linear-gradient(135deg, #ffffff, #eef2f8);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px rgba(132,155,196,0.2), inset 0 1px 2px rgba(255,255,255,1);
+      flex-shrink: 0;
+    }
+    html[data-design="glace"] .settings-icon-wrap {
+      box-shadow: 0 10px 24px var(--ac-gw, rgba(132,155,196,0.35)), inset 0 2px 4px rgba(255,255,255,1);
+    }
+    .settings-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--ti-text-muted); font-size: 1.4rem; line-height: 1;
+      padding: 4px 8px; border-radius: 8px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .settings-close:hover { color: var(--ti-text); background: var(--flat-surface-hover); }
+
+    .settings-section-label {
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--ti-text-muted);
+      margin-bottom: 12px;
+    }
+
+    /* Theme Card Grid */
+    .theme-card-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    .theme-card {
+      border-radius: 20px; overflow: hidden;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+    .theme-card:hover { transform: translateY(-3px); }
+    .theme-card.selected {
+      border-color: var(--ti-accent);
+      box-shadow: 0 0 0 1px var(--ti-accent), 0 8px 24px var(--ti-accent-dim);
+    }
+    .theme-card-preview {
+      height: 140px; position: relative; overflow: hidden;
+    }
+    .theme-card-info {
+      padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .theme-card-name { font-weight: 700; font-size: 0.95rem; }
+    .theme-card-desc { font-size: 0.75rem; color: var(--ti-text-muted); margin-top: 2px; }
+    .theme-card-check {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid var(--ti-border);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .theme-card.selected .theme-card-check {
+      background: var(--ti-accent); border-color: var(--ti-accent);
+    }
+    .theme-card-check svg { display: none; }
+    .theme-card.selected .theme-card-check svg { display: block; }
+
+    /* --- Flatinium Light Preview --- */
+    .preview-flatinium-light {
+      background: #eaedf2;
+    }
+    .preview-flatinium-light .prev-sidebar {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 38%;
+      background: #eaedf2;
+      border-right: 1px solid rgba(0,0,0,0.1);
+      padding: 10px 8px; display: flex; flex-direction: column; gap: 5px;
+    }
+    .preview-flatinium-light .prev-card {
+      background: linear-gradient(145deg, #fff, #f0f2f5);
+      border: 1px solid rgba(0,0,0,0.1); border-radius: 6px;
+      height: 14px;
+    }
+    .preview-flatinium-light .prev-card.tall { height: 28px; }
+    .preview-flatinium-light .prev-main {
+      position: absolute; left: 38%; top: 0; right: 0; bottom: 0;
+      padding: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; align-content: center;
+    }
+    .preview-flatinium-light .prev-desk {
+      background: linear-gradient(145deg, #fff, #f0f2f5);
+      border: 1px solid rgba(0,0,0,0.1); border-radius: 4px;
+      height: 22px;
+    }
+    .preview-flatinium-light .prev-desk.accent {
+      background: linear-gradient(145deg, #0d9488, #0f766e); border-color: #0d9488;
+    }
+    .prev-label {
+      position: absolute; bottom: 8px; right: 8px;
+      font-size: 0.55rem; font-weight: 600; letter-spacing: 0.05em;
+      color: #646a78; text-transform: uppercase;
+    }
+
+    /* --- Flatinium Dark Preview --- */
+    .preview-flatinium-dark {
+      background: #090a0d;
+    }
+    .preview-flatinium-dark .prev-sidebar {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 38%;
+      background: #090a0d;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      padding: 10px 8px; display: flex; flex-direction: column; gap: 5px;
+    }
+    .preview-flatinium-dark .prev-card {
+      background: linear-gradient(145deg, #1f222a, #14161b);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; height: 14px;
+    }
+    .preview-flatinium-dark .prev-card.tall { height: 28px; }
+    .preview-flatinium-dark .prev-main {
+      position: absolute; left: 38%; top: 0; right: 0; bottom: 0;
+      padding: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; align-content: center;
+    }
+    .preview-flatinium-dark .prev-desk {
+      background: linear-gradient(145deg, #1f222a, #14161b);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; height: 22px;
+    }
+    .preview-flatinium-dark .prev-desk.accent {
+      background: #2dd4bf; border-color: #2dd4bf;
+    }
+    .preview-flatinium-dark .prev-label { color: #9ba1ad; }
+
+    /* --- Glace Light Preview --- */
+    .preview-glace-light {
+      background: #E8EDF4;
+      overflow: hidden;
+    }
+    .preview-glace-light .prev-orb {
+      position: absolute; border-radius: 50%; filter: blur(30px); opacity: 0.6;
+    }
+    .preview-glace-light .prev-orb-1 { width: 120px; height: 120px; background: radial-gradient(circle, #c7d4f0, transparent); top: -30px; left: -20px; }
+    .preview-glace-light .prev-orb-2 { width: 100px; height: 100px; background: radial-gradient(circle, #f0d4e0, transparent); bottom: -20px; right: -10px; }
+    .preview-glace-light .prev-sidebar {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 38%;
+      background: transparent;
+      border-right: 1px solid rgba(255,255,255,0.25);
+      padding: 10px 8px; display: flex; flex-direction: column; gap: 5px;
+    }
+    .preview-glace-light .prev-card {
+      background: rgba(255,255,255,0.28); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.5); border-radius: 10px;
+      height: 14px;
+      box-shadow: inset 1px 1px 1px rgba(255,255,255,0.8), 0 4px 8px rgba(20,30,50,0.06);
+    }
+    .preview-glace-light .prev-card.tall { height: 28px; }
+    .preview-glace-light .prev-main {
+      position: absolute; left: 38%; top: 0; right: 0; bottom: 0;
+      padding: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; align-content: center;
+    }
+    .preview-glace-light .prev-desk {
+      background: rgba(255,255,255,0.25); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.45); border-radius: 8px;
+      height: 22px;
+      box-shadow: inset 1px 1px 1px rgba(255,255,255,0.7);
+    }
+    .preview-glace-light .prev-desk.accent {
+      background: rgba(132,155,196,0.8);
+      border-color: rgba(255,255,255,0.5);
+      box-shadow: 0 0 8px rgba(132,155,196,0.4), inset 1px 1px 1px rgba(255,255,255,0.5);
+    }
+    .preview-glace-light .prev-label { color: #4A5568; }
+
+    /* --- Glace Dark Preview --- */
+    .preview-glace-dark {
+      background: #0B0F17;
+      overflow: hidden;
+    }
+    .preview-glace-dark .prev-orb {
+      position: absolute; border-radius: 50%; filter: blur(30px); opacity: 0.25;
+    }
+    .preview-glace-dark .prev-orb-1 { width: 120px; height: 120px; background: radial-gradient(circle, #3d5a8a, transparent); top: -30px; left: -20px; }
+    .preview-glace-dark .prev-orb-2 { width: 100px; height: 100px; background: radial-gradient(circle, #2d3a5a, transparent); bottom: -20px; right: -10px; }
+    .preview-glace-dark .prev-sidebar {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 38%;
+      background: transparent; border-right: 1px solid rgba(255,255,255,0.08);
+      padding: 10px 8px; display: flex; flex-direction: column; gap: 5px;
+    }
+    .preview-glace-dark .prev-card {
+      background: rgba(255,255,255,0.04); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; height: 14px;
+      box-shadow: inset 1px 1px 1px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .preview-glace-dark .prev-card.tall { height: 28px; }
+    .preview-glace-dark .prev-main {
+      position: absolute; left: 38%; top: 0; right: 0; bottom: 0;
+      padding: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; align-content: center;
+    }
+    .preview-glace-dark .prev-desk {
+      background: rgba(255,255,255,0.04); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; height: 22px;
+      box-shadow: inset 1px 1px 1px rgba(255,255,255,0.08);
+    }
+    .preview-glace-dark .prev-desk.accent {
+      background: rgba(160,180,218,0.4); border-color: rgba(255,255,255,0.25);
+      box-shadow: 0 0 8px rgba(160,180,218,0.3), inset 1px 1px 1px rgba(255,255,255,0.15);
+    }
+    .preview-glace-dark .prev-label { color: #A0AEC0; }
+
+    /* Theme card info areas */
+    .theme-info-flatinium-light { background: #eaedf2; }
+    .theme-info-flatinium-dark { background: #090a0d; }
+    .theme-info-glace-light {
+      background: rgba(240,245,255,0.85);
+      backdrop-filter: blur(8px);
+    }
+    .theme-info-glace-dark {
+      background: rgba(12,18,30,0.9);
+      backdrop-filter: blur(8px);
+    }
+    .theme-info-flatinium-dark .theme-card-name,
+    .theme-info-flatinium-dark .theme-card-desc,
+    .theme-info-glace-dark .theme-card-name,
+    .theme-info-glace-dark .theme-card-desc { color: #e0e4f0; }
+    .theme-info-flatinium-dark .theme-card-desc,
+    .theme-info-glace-dark .theme-card-desc { color: #8090a8; }
+
+    /* Mode Toggle within settings */
+    .mode-toggle-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .mode-btn {
+      flex: 1; padding: 10px 16px; border-radius: 12px;
+      border: 1.5px solid var(--ti-border); cursor: pointer;
+      font-family: inherit; font-size: 0.9rem; font-weight: 600;
+      transition: all 0.2s var(--ti-ease);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--flat-surface-hover); color: var(--ti-text-muted);
+    }
+    .mode-btn.active {
+      background: var(--ti-accent); color: #fff;
+      border-color: var(--ti-accent);
+      box-shadow: 0 0 16px var(--ti-accent-dim);
+    }
+    html[data-design="glace"] .mode-btn {
+      background: var(--gl-base); backdrop-filter: var(--bl-base);
+      box-shadow: var(--btn-edge); border-color: rgba(255,255,255,0.3);
+      border-radius: var(--r-m);
+    }
+    html[data-design="glace"] .mode-btn.active {
+      background: var(--btn-p-bg); border-color: rgba(255,255,255,0.3);
+      box-shadow: 0 0 16px var(--ac-gw);
+    }
+
+    /* =========================================
+       [Print Styles]
+       ========================================= */
+    @media print {
+      body { background: #fff !important; color: #000 !important; }
+      .sidebar, .header, .button-group, .bg-scene { display: none !important; }
+      .main-content { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; overflow: visible; }
+      .canvas-board { border: none !important; background-image: none !important; box-shadow: none !important; transform: none !important; width: 100% !important; height: 100% !important; }
+      .ti-card { background: #fff !important; border: 1px solid #ccc !important; box-shadow: none !important; color: #000 !important; }
+      .ti-card::before { display: none; }
+      .desk { border: 1px solid #000 !important; color: #000 !important; }
+      .desk.empty { color: transparent !important; border: 1px dashed #ccc !important; }
+      .teacher-desk { border: 1px solid #000 !important; background: transparent !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Aurora Background (Glace only) -->
+  <div class="bg-scene">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Sidebar Settings -->
+    <aside class="sidebar ti-card">
+      <div class="header-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ti-accent)">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+          <line x1="9" y1="21" x2="9" y2="9"></line>
+        </svg>
+        좌석 배정 시스템
+      </div>
+
+      <div class="form-group">
+        <label>총 인원수 (좌석 수)</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="number" id="inputTotal" class="ti-input" value="22" min="1" max="50" style="flex: 2;">
+          <button id="btnAddDesk" class="ti-btn" style="flex: 1;">+ 1명 추가</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>프리셋 (빠른 설정)</label>
+        <div class="grid-inputs">
+          <button id="btnPreset1" class="ti-btn" style="flex: 1; font-size: 0.8rem; padding: 8px 4px; text-align: center;">일반 대형<br>(3분단 짝꿍)</button>
+          <button id="btnPreset2" class="ti-btn" style="flex: 1; font-size: 0.8rem; padding: 8px 4px; text-align: center;">시험 대형<br>(5열 단독)</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>행(Row) / 열(Col) 지정</label>
+        <div class="grid-inputs">
+          <input type="number" id="inputRows" class="ti-input" value="4" min="1" max="10">
+          <input type="number" id="inputCols" class="ti-input" value="6" min="1" max="10">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>분단 수 (예: 2, 3, 0=없음)</label>
+        <input type="number" id="inputDivision" class="ti-input" value="3" min="0" max="10">
+      </div>
+
+      <div class="form-group">
+        <label>학생 명단 (콤마 또는 줄바꿈으로 구분)</label>
+        <textarea id="inputStudents" class="ti-input" placeholder="예시: 홍길동, 김철수&#10;(콤마 또는 줄바꿈으로 구분)"></textarea>
+      </div>
+
+      <button id="btnApplyGrid" class="ti-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 1 0 2.13-5.88L2 9"></path></svg>
+        좌석 생성 및 초기화
+      </button>
+      
+      <div style="font-size: 0.75rem; color: var(--ti-text-muted); text-align: left; margin-top: -4px; line-height: 1.4; background: var(--flat-surface-hover); padding: 8px; border-radius: var(--radius-sm);">
+        <b>[자유 배치 캔버스 가이드]</b><br>
+        • 생성된 좌석을 <b>끌어서 마음대로 배치</b>하세요.<br>
+        • <b>다른 좌석 위로 겹쳐서 드롭</b>하면 두 자리의 학생이 교체(Swap)됩니다.
+      </div>
+
+      <div class="ti-toggle-wrap">
+        <label style="font-size: 0.9rem; font-weight: 500;">선배정 모드 (클릭하여 배정)</label>
+        <div id="togglePreAssign" class="ti-toggle">
+          <div class="ti-toggle-knob"></div>
+        </div>
+      </div>
+
+      <div class="ti-toggle-wrap">
+        <label style="font-size: 0.9rem; font-weight: 500; color: var(--ti-danger);">좌석 삭제 모드 (클릭하여 삭제)</label>
+        <div id="toggleDeleteMode" class="ti-toggle">
+          <div class="ti-toggle-knob"></div>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button id="btnRandomAssignAll" class="ti-btn primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          전체 무작위 배정
+        </button>
+        <button id="btnPauseResume" class="ti-btn warning" style="display: none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          일시 정지
+        </button>
+        <button id="btnRandomAssignOne" class="ti-btn primary" style="background: var(--flat-bg); color: var(--ti-text); border-color: var(--ti-border);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          1명 무작위 배정
+        </button>
+        <button id="btnRotateView" class="ti-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.92-10.44l5.36 5.36"></path></svg>
+          교탁/학생 기준 회전
+        </button>
+        <button id="btnPrint" class="ti-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          결과 출력
+        </button>
+        <button id="btnReset" class="ti-btn" style="color: var(--ti-danger); border-color: transparent;">
+          결과 초기화 (또는 중단)
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Board -->
+    <main class="main-content">
+      <header class="header">
+        <button id="btnSettings" class="ti-btn" style="border-radius: 50%; width: 40px; height: 40px; padding: 0;" title="설정">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+        <button id="btnSecretReset" class="ti-btn" style="display:none;">초기화</button>
+        <button id="btnSecretCancel" class="ti-btn" style="display:none;">저장 없이 종료</button>
+        <button id="btnSecretSave" class="ti-btn primary" style="display:none;">저장</button>
+        <button id="btnThemeToggle" class="ti-btn" style="border-radius: 50%; width: 40px; height: 40px; padding: 0;" title="라이트/다크 토글">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
+      </header>
+
+      <div class="board-area">
+        <div id="canvasBoard" class="canvas-board">
+          <div class="teacher-desk ti-card">교 탁</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div id="ti-toast">알림 메시지</div>
+
+  <!-- Confirm Modal -->
+  <dialog id="confirmModal">
+    <div class="ti-card modal-content" style="width: 320px;">
+      <div style="font-weight: 700; border-bottom: 1px solid var(--ti-border); padding-bottom: 12px; font-size: 1.1rem;">확인</div>
+      <div id="confirmMessage" style="padding: 10px 0; line-height: 1.5; color: var(--ti-text);">메시지</div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
+        <button id="btnConfirmCancel" class="ti-btn">취소</button>
+        <button id="btnConfirmOk" class="ti-btn primary">확인</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Pre-assign Modal -->
+  <dialog id="preAssignModal">
+    <div class="ti-card modal-content">
+      <div style="font-weight: 700; border-bottom: 1px solid var(--ti-border); padding-bottom: 12px; display:flex; justify-content:space-between;">
+        <span>선배정할 학생 선택</span>
+        <button id="btnCancelPreAssign" style="background:none; border:none; color:var(--ti-text-muted); cursor:pointer;">✕</button>
+      </div>
+      <div id="studentListUI" class="student-list-ui"></div>
+      <button id="btnRemovePreAssign" class="ti-btn" style="color: var(--ti-danger);">배정 해제 (빈 자리로)</button>
+    </div>
+  </dialog>
+
+  <!-- Secret Assign Modal (교사 전용, 학생에게 노출되지 않는 설정 화면) -->
+  <dialog id="secretAssignModal">
+    <div class="ti-card modal-content">
+      <div style="font-weight: 700; border-bottom: 1px solid var(--ti-border); padding-bottom: 12px; display:flex; justify-content:space-between;">
+        <span>비밀 배정할 학생 선택</span>
+        <button id="btnCancelSecretAssign" style="background:none; border:none; color:var(--ti-text-muted); cursor:pointer;">✕</button>
+      </div>
+      <div id="secretAssignCurrent" style="font-size: 0.8rem; color: var(--ti-text-muted);"></div>
+      <div id="secretStudentListUI" class="student-list-ui"></div>
+      <button id="btnRemoveSecretAssign" class="ti-btn" style="color: var(--ti-danger);">비밀 배정 해제</button>
+    </div>
+  </dialog>
+
+  <!-- =============================================
+       SETTINGS MODAL
+       ============================================= -->
+  <dialog id="settingsModal">
+    <div class="ti-card modal-content" style="width: 640px; max-width: 95vw; padding: 36px 40px; display: flex; flex-direction: column; gap: 28px;">
+      
+      <!-- Header -->
+      <div class="settings-header">
+        <div class="settings-title">
+          <div class="settings-icon-wrap">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#849BC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </div>
+          환경 설정
+        </div>
+        <button class="settings-close" id="btnSettingsClose">✕</button>
+      </div>
+
+      <!-- Dark/Light Mode Row -->
+      <div>
+        <div class="settings-section-label">밝기 모드</div>
+        <div class="mode-toggle-row">
+          <button class="mode-btn" id="modeBtnLight">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            라이트
+          </button>
+          <button class="mode-btn" id="modeBtnDark">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            다크
+          </button>
+        </div>
+      </div>
+
+      <!-- Design Theme Section -->
+      <div>
+        <div class="settings-section-label">디자인 테마</div>
+        <div class="theme-card-grid">
+
+          <!-- Flatinium Light -->
+          <div class="theme-card" data-design="flatinium" data-subtheme="light" id="themeCard-flatinium-light">
+            <div class="theme-card-preview preview-flatinium-light">
+              <div class="prev-sidebar">
+                <div class="prev-card tall"></div>
+                <div class="prev-card"></div>
+                <div class="prev-card"></div>
+                <div class="prev-card"></div>
+              </div>
+              <div class="prev-main">
+                <div class="prev-desk"></div>
+                <div class="prev-desk accent"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk accent"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk"></div>
+              </div>
+              <div class="prev-label">LIGHT 1</div>
+            </div>
+            <div class="theme-card-info theme-info-flatinium-light">
+              <div>
+                <div class="theme-card-name">Light 1</div>
+              </div>
+              <div class="theme-card-check">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Flatinium Dark -->
+          <div class="theme-card" data-design="flatinium" data-subtheme="dark" id="themeCard-flatinium-dark">
+            <div class="theme-card-preview preview-flatinium-dark">
+              <div class="prev-sidebar">
+                <div class="prev-card tall"></div>
+                <div class="prev-card"></div>
+                <div class="prev-card"></div>
+                <div class="prev-card"></div>
+              </div>
+              <div class="prev-main">
+                <div class="prev-desk"></div>
+                <div class="prev-desk accent"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk accent"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk"></div>
+              </div>
+              <div class="prev-label">DARK 1</div>
+            </div>
+            <div class="theme-card-info theme-info-flatinium-dark">
+              <div>
+                <div class="theme-card-name">Dark 1</div>
+              </div>
+              <div class="theme-card-check">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Glace Light -->
+          <div class="theme-card" data-design="glace" data-subtheme="light" id="themeCard-glace-light">
+            <div class="theme-card-preview preview-glace-light">
+              <div class="prev-orb prev-orb-1"></div>
+              <div class="prev-orb prev-orb-2"></div>
+              <div class="prev-sidebar">
+                <div class="prev-card tall"></div>
+                <div class="prev-card"></div>
+                <div class="prev-card"></div>
+                <div class="prev-card"></div>
+              </div>
+              <div class="prev-main">
+                <div class="prev-desk"></div>
+                <div class="prev-desk accent"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk accent"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk"></div>
+              </div>
+              <div class="prev-label" style="color:#4A5568">LIGHT 2</div>
+            </div>
+            <div class="theme-card-info theme-info-glace-light">
+              <div>
+                <div class="theme-card-name">Light 2</div>
+              </div>
+              <div class="theme-card-check">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Glace Dark -->
+          <div class="theme-card" data-design="glace" data-subtheme="dark" id="themeCard-glace-dark">
+            <div class="theme-card-preview preview-glace-dark">
+              <div class="prev-orb prev-orb-1"></div>
+              <div class="prev-orb prev-orb-2"></div>
+              <div class="prev-sidebar">
+                <div class="prev-card tall"></div>
+                <div class="prev-card"></div>
+                <div class="prev-card"></div>
+                <div class="prev-card"></div>
+              </div>
+              <div class="prev-main">
+                <div class="prev-desk"></div>
+                <div class="prev-desk accent"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk accent"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk"></div>
+                <div class="prev-desk"></div>
+              </div>
+              <div class="prev-label" style="color:#A0AEC0">DARK 2</div>
+            </div>
+            <div class="theme-card-info theme-info-glace-dark">
+              <div>
+                <div class="theme-card-name">Dark 2</div>
+              </div>
+              <div class="theme-card-check">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 비밀 선배정: 학생들에게 보여줄 화면(사이드바)에는 노출하지 않고 설정 창 안에서만 조작 -->
+      <div>
+        <div class="settings-section-label">비밀 선배정</div>
+        <div style="font-size: 0.82rem; color: var(--ti-text-muted); line-height: 1.6; margin-bottom: 12px;">
+          학생 화면에는 표시되지 않는 기능입니다. 아래 버튼을 눌러 설정 모드를 켠 뒤 원하는 좌석을 눌러 학생을 지정하세요.
+          '전체 무작위 배정'을 실행하면 겉으로는 다른 자리와 똑같이 무작위로 섞이지만, 지정해둔 학생은 반드시 그 자리에 배정됩니다.
+        </div>
+        <div id="secretModeStatus" style="display:none; font-size: 0.82rem; color: var(--ti-accent); font-weight: 600; margin-bottom: 12px;">
+          현재 설정 진행 중입니다 — 화면 상단(설정 버튼 옆)의 '저장' 버튼을 눌러 종료하세요.
+        </div>
+        <button id="btnToggleSecretMode" class="ti-btn" style="width: 100%;">비밀 선배정 설정 시작</button>
+      </div>
+
+      <!-- Apply Button -->
+      <div style="display:flex; justify-content:flex-end;">
+        <button id="btnSettingsApply" class="ti-btn primary" style="min-width: 120px; padding: 12px 28px; font-size: 1rem;">
+          적용
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    /* =========================================
+       [State Management]
+       ========================================= */
+    const state = {
+      rows: 4, cols: 6, division: 3, totalDesks: 22,
+      students: [], desks: [],
+      isPreAssignMode: false, isDeleteMode: false, isSecretAssignMode: false,
+      isTeacherView: true, isAnimating: false, isPaused: false,
+      selectedDeskIdForAssign: null
+    };
+    let dragInfo = null;
+
+    // Settings state
+    const settings = {
+      design: 'flatinium', // 'flatinium' | 'glace'
+      theme: 'light',      // 'light' | 'dark'
+      pendingDesign: 'flatinium',
+      pendingTheme: 'light'
+    };
+
+    /* =========================================
+       [DOM Elements]
+       ========================================= */
+    const elTotal = document.getElementById('inputTotal');
+    const elRows = document.getElementById('inputRows');
+    const elCols = document.getElementById('inputCols');
+    const elDivision = document.getElementById('inputDivision');
+    const elStudents = document.getElementById('inputStudents');
+    const btnAddDesk = document.getElementById('btnAddDesk');
+    const btnPreset1 = document.getElementById('btnPreset1');
+    const btnPreset2 = document.getElementById('btnPreset2');
+    const btnApplyGrid = document.getElementById('btnApplyGrid');
+    const togglePreAssign = document.getElementById('togglePreAssign');
+    const toggleDeleteMode = document.getElementById('toggleDeleteMode');
+    const btnToggleSecretMode = document.getElementById('btnToggleSecretMode');
+    const secretModeStatus = document.getElementById('secretModeStatus');
+    const btnSecretReset = document.getElementById('btnSecretReset');
+    const btnSecretCancel = document.getElementById('btnSecretCancel');
+    const btnSecretSave = document.getElementById('btnSecretSave');
+    let secretAssignBackup = null; // 비밀 선배정 모드 진입 시점의 스냅샷 ('저장 없이 종료' 시 이 상태로 복원)
+    const btnRandomAssignAll = document.getElementById('btnRandomAssignAll');
+    const btnRandomAssignOne = document.getElementById('btnRandomAssignOne');
+    const btnPauseResume = document.getElementById('btnPauseResume');
+    const btnRotateView = document.getElementById('btnRotateView');
+    const btnPrint = document.getElementById('btnPrint');
+    const btnReset = document.getElementById('btnReset');
+    const btnThemeToggle = document.getElementById('btnThemeToggle');
+    const btnSettings = document.getElementById('btnSettings');
+    const canvasBoard = document.getElementById('canvasBoard');
+    const preAssignModal = document.getElementById('preAssignModal');
+    const studentListUI = document.getElementById('studentListUI');
+    const btnCancelPreAssign = document.getElementById('btnCancelPreAssign');
+    const btnRemovePreAssign = document.getElementById('btnRemovePreAssign');
+    const secretAssignModal = document.getElementById('secretAssignModal');
+    const secretStudentListUI = document.getElementById('secretStudentListUI');
+    const secretAssignCurrent = document.getElementById('secretAssignCurrent');
+    const btnCancelSecretAssign = document.getElementById('btnCancelSecretAssign');
+    const btnRemoveSecretAssign = document.getElementById('btnRemoveSecretAssign');
+    const settingsModal = document.getElementById('settingsModal');
+    const btnSettingsClose = document.getElementById('btnSettingsClose');
+    const btnSettingsApply = document.getElementById('btnSettingsApply');
+    const modeBtnLight = document.getElementById('modeBtnLight');
+    const modeBtnDark = document.getElementById('modeBtnDark');
+
+    /* =========================================
+       [Utilities]
+       ========================================= */
+    function showToast(msg) {
+      const toast = document.getElementById('ti-toast');
+      toast.innerText = msg;
+      toast.style.bottom = '40px';
+      setTimeout(() => toast.style.bottom = '-100px', 3000);
+    }
+
+    function customConfirm(message, onConfirm) {
+      const modal = document.getElementById('confirmModal');
+      if (modal.open) return; // 중복 호출로 showModal() 예외 방지 (연타/멀티터치 대비)
+      document.getElementById('confirmMessage').innerText = message;
+      const btnOk = document.getElementById('btnConfirmOk');
+      const btnCancel = document.getElementById('btnConfirmCancel');
+      const cleanup = () => { btnOk.removeEventListener('click', okHandler); btnCancel.removeEventListener('click', cancelHandler); modal.close(); };
+      const okHandler = () => { cleanup(); onConfirm(); };
+      const cancelHandler = () => { cleanup(); };
+      btnOk.addEventListener('click', okHandler);
+      btnCancel.addEventListener('click', cancelHandler);
+      modal.showModal();
+    }
+
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+    /* =========================================
+       [Settings Logic]
+       ========================================= */
+    function openSettings() {
+      if (settingsModal.open) return;
+      // Sync pending state
+      settings.pendingDesign = settings.design;
+      settings.pendingTheme = settings.theme;
+      updateSettingsUI();
+      // 비밀 선배정이 이미 진행 중이면, 다시 시작 버튼을 누르지 않도록 안내 문구로 대체
+      secretModeStatus.style.display = state.isSecretAssignMode ? 'block' : 'none';
+      btnToggleSecretMode.style.display = state.isSecretAssignMode ? 'none' : 'block';
+      settingsModal.showModal();
+    }
+
+    function updateSettingsUI() {
+      // Mode buttons
+      modeBtnLight.classList.toggle('active', settings.pendingTheme === 'light');
+      modeBtnDark.classList.toggle('active', settings.pendingTheme === 'dark');
+
+      // Theme cards
+      document.querySelectorAll('.theme-card').forEach(card => {
+        const d = card.dataset.design;
+        const s = card.dataset.subtheme;
+        const isSelected = (d === settings.pendingDesign && s === settings.pendingTheme);
+        card.classList.toggle('selected', isSelected);
+      });
+    }
+
+    function setSecretAssignMode(on) {
+      state.isSecretAssignMode = on;
+      canvasBoard.classList.toggle('secret-assign-mode', on);
+      // 설정 버튼 옆에 '초기화/저장' 버튼을 띄워, 매번 설정 창을 다시 열지 않고도 바로 종료할 수 있게 함
+      btnSecretReset.style.display = on ? 'inline-flex' : 'none';
+      btnSecretCancel.style.display = on ? 'inline-flex' : 'none';
+      btnSecretSave.style.display = on ? 'inline-flex' : 'none';
+      renderBoard(); // 모드 진입/이탈 시 좌석에 이름을 보여줄지 '빈 자리'로 보일지가 바뀌므로 다시 그려줌
+    }
+
+    function applyTheme(design, theme) {
+      const html = document.documentElement;
+      html.setAttribute('data-design', design);
+      html.setAttribute('data-theme', theme);
+      settings.design = design;
+      settings.theme = theme;
+
+      // Re-render desks with correct class
+      renderBoard();
+    }
+
+    /* =========================================
+       [Initialization]
+       ========================================= */
+    function init() {
+      parseStudents();
+      generateCanvasDesks();
+      renderBoard();
+      attachEvents();
+    }
+
+    function parseStudents() {
+      const raw = elStudents.value;
+      state.students = raw.split(/[\n,]+/).map(s => s.trim()).filter(s => s !== '');
+    }
+
+    function generateCanvasDesks() {
+      state.totalDesks = parseInt(elTotal.value) || 22;
+      state.rows = parseInt(elRows.value) || 4;
+      state.cols = parseInt(elCols.value) || 6;
+      state.division = parseInt(elDivision.value) || 3;
+      state.desks = [];
+      const deskWidth = 100, deskHeight = 60, defaultGapX = 20, divGapX = 60, gapY = 30;
+      const divisionSize = state.division > 1 ? Math.ceil(state.cols / state.division) : state.cols;
+      let totalWidth = 0;
+      for (let c = 0; c < state.cols; c++) {
+        totalWidth += deskWidth;
+        if (c < state.cols - 1) {
+          if (state.division > 1 && (c + 1) % divisionSize === 0) totalWidth += divGapX;
+          else totalWidth += defaultGapX;
+        }
+      }
+      const startX = (1000 - totalWidth) / 2;
+      const startY = 120;
+      const adjustedStartX = Math.round(startX / 40) * 40;
+      let idCounter = 0;
+      for (let r = 0; r < state.rows; r++) {
+        let currentX = adjustedStartX;
+        for (let c = 0; c < state.cols; c++) {
+          if (idCounter >= state.totalDesks) break;
+          state.desks.push({ id: idCounter++, student: null, isFixed: false, secretStudent: null, x: Math.round(currentX / 40) * 40, y: Math.round((startY + r * (deskHeight + gapY)) / 30) * 30 });
+          currentX += deskWidth;
+          if (c < state.cols - 1) {
+            if (state.division > 1 && (c + 1) % divisionSize === 0) currentX += divGapX;
+            else currentX += defaultGapX;
+          }
+        }
+      }
+    }
+
+    function renderBoard() {
+      Array.from(canvasBoard.children).forEach(child => {
+        if (child.classList.contains('desk')) canvasBoard.removeChild(child);
+      });
+      state.desks.forEach((desk) => {
+        const deskEl = document.createElement('div');
+        deskEl.className = 'ti-card desk';
+        deskEl.id = `desk-${desk.id}`;
+        deskEl.style.left = `${desk.x}px`;
+        deskEl.style.top = `${desk.y}px`;
+        if (desk.student) {
+          deskEl.innerText = desk.student;
+          deskEl.classList.remove('empty');
+          if (desk.isFixed) deskEl.classList.add('pre-assigned');
+        } else if (state.isSecretAssignMode && desk.secretStudent) {
+          // 비밀 선배정을 '설정하는 동안'에는 교사에게 실제 이름을 보여준다.
+          // 학생에게 보일 필요가 없을 뿐, 교사에게까지 숨길 이유는 없기 때문.
+          // '저장'을 누르는 순간 이 모드가 꺼지고, 아래 else 분기로 넘어가 다시 '빈 자리'로 표시된다.
+          deskEl.innerText = desk.secretStudent;
+          deskEl.classList.remove('empty');
+        } else {
+          deskEl.innerText = '빈 자리';
+          deskEl.classList.add('empty');
+        }
+        // 점선 테두리 표시 자체는 CSS에서 .secret-assign-mode 상태일 때만 보이도록 되어 있어,
+        // 이 모드를 꺼두면(수업 중) 학생에게는 일반 빈 자리와 완전히 똑같이 보임
+        if (desk.secretStudent) deskEl.classList.add('secret-armed');
+        canvasBoard.appendChild(deskEl);
+      });
+    }
+
+    /* =========================================
+       [Free Canvas Drag & Drop Logic]
+       ========================================= */
+    function attachCanvasDragEvents() {
+      canvasBoard.addEventListener('pointerdown', (e) => {
+        if (state.isAnimating) return;
+        if (!e.isPrimary) return; // 태블릿에서 손바닥이 닿는 등 보조 터치포인트는 무시
+        const deskEl = e.target.closest('.desk');
+        if (!deskEl) return;
+        // 터치 시 브라우저가 뒤늦게 만들어내는 합성 click 이벤트(고스트 클릭)를 막아,
+        // 방금 열린 모달의 다른 항목이 같은 자리에서 잘못 클릭되는 것을 방지
+        e.preventDefault();
+        if (state.isPreAssignMode || state.isDeleteMode || state.isSecretAssignMode) { handleDeskClick(parseInt(deskEl.id.replace('desk-', ''))); return; }
+        if (dragInfo) return; // 이미 다른 손가락으로 드래그 중이면 새 드래그 시작 방지
+        deskEl.setPointerCapture(e.pointerId);
+        const deskId = parseInt(deskEl.id.replace('desk-', ''));
+        const deskObj = state.desks.find(d => d.id === deskId);
+        dragInfo = { pointerId: e.pointerId, deskEl, deskObj, startX: e.clientX, startY: e.clientY, origX: deskObj.x, origY: deskObj.y, hoveredTarget: null };
+        deskEl.style.zIndex = '100';
+        deskEl.style.transition = 'none';
+      });
+
+      canvasBoard.addEventListener('pointermove', (e) => {
+        if (!dragInfo) return;
+        if (e.pointerId !== dragInfo.pointerId) return; // 드래그 중인 손가락(포인터)만 처리
+        const rot = state.isTeacherView ? 1 : -1;
+        const dx = (e.clientX - dragInfo.startX) * rot;
+        const dy = (e.clientY - dragInfo.startY) * rot;
+        let newX = Math.round((dragInfo.origX + dx) / 40) * 40;
+        let newY = Math.round((dragInfo.origY + dy) / 30) * 30;
+        newX = Math.max(0, Math.min(newX, 900));
+        newY = Math.max(0, Math.min(newY, 640));
+        dragInfo.deskEl.style.left = `${newX}px`;
+        dragInfo.deskEl.style.top = `${newY}px`;
+        const cx = newX + 50, cy = newY + 30;
+        let target = null;
+        for (const desk of state.desks) {
+          if (desk.id !== dragInfo.deskObj.id && cx >= desk.x && cx <= desk.x + 100 && cy >= desk.y && cy <= desk.y + 60) { target = document.getElementById(`desk-${desk.id}`); break; }
+        }
+        if (dragInfo.hoveredTarget !== target) {
+          if (dragInfo.hoveredTarget) dragInfo.hoveredTarget.classList.remove('drag-over');
+          if (target) target.classList.add('drag-over');
+          dragInfo.hoveredTarget = target;
+        }
+      });
+
+      canvasBoard.addEventListener('pointerup', (e) => {
+        if (!dragInfo) return;
+        if (e.pointerId !== dragInfo.pointerId) return; // 드래그 중인 손가락(포인터)만 처리
+        dragInfo.deskEl.releasePointerCapture(e.pointerId);
+        dragInfo.deskEl.style.zIndex = '';
+        dragInfo.deskEl.style.transition = 'all 0.2s var(--ti-ease), transform 0.6s var(--ti-ease)';
+        if (dragInfo.hoveredTarget) {
+          dragInfo.hoveredTarget.classList.remove('drag-over');
+          const targetId = parseInt(dragInfo.hoveredTarget.id.replace('desk-', ''));
+          const targetObj = state.desks.find(d => d.id === targetId);
+          const tempStudent = dragInfo.deskObj.student, tempFixed = dragInfo.deskObj.isFixed;
+          dragInfo.deskObj.student = targetObj.student; dragInfo.deskObj.isFixed = targetObj.isFixed;
+          targetObj.student = tempStudent; targetObj.isFixed = tempFixed;
+          dragInfo.deskObj.x = dragInfo.origX; dragInfo.deskObj.y = dragInfo.origY;
+          showToast("학생 자리가 서로 교체되었습니다.");
+        } else {
+          dragInfo.deskObj.x = parseInt(dragInfo.deskEl.style.left);
+          dragInfo.deskObj.y = parseInt(dragInfo.deskEl.style.top);
+        }
+        dragInfo = null;
+        renderBoard();
+      });
+
+      // 태블릿에서는 화면 가장자리 스와이프, 알림창, 다중 손가락 접촉 등으로
+      // pointerup 없이 드래그가 강제 종료(pointercancel)되는 경우가 잦음.
+      // 이 이벤트를 처리하지 않으면 좌석이 든 상태(z-index 상승, transition 없음)로
+      // 멈춰버리는 "먹통" 현상이 발생하므로 반드시 원상 복구해야 함.
+      canvasBoard.addEventListener('pointercancel', (e) => {
+        if (!dragInfo) return;
+        if (e.pointerId !== dragInfo.pointerId) return;
+        dragInfo.deskEl.style.left = `${dragInfo.origX}px`;
+        dragInfo.deskEl.style.top = `${dragInfo.origY}px`;
+        dragInfo.deskEl.style.zIndex = '';
+        dragInfo.deskEl.style.transition = 'all 0.2s var(--ti-ease), transform 0.6s var(--ti-ease)';
+        if (dragInfo.hoveredTarget) dragInfo.hoveredTarget.classList.remove('drag-over');
+        dragInfo = null;
+      });
+    }
+
+    /* =========================================
+       [Interactions]
+       ========================================= */
+    function handleDeskClick(deskId) {
+      if (state.isAnimating) return;
+      if (state.isDeleteMode) {
+        if (!state.desks.some(d => d.id === deskId)) return; // 이미 삭제된 좌석에 대한 중복 이벤트 방지
+        state.desks = state.desks.filter(d => d.id !== deskId); elTotal.value = state.desks.length; renderBoard(); showToast("좌석이 삭제되었습니다."); return;
+      }
+      if (state.isSecretAssignMode) {
+        if (secretAssignModal.open) return; // 중복 탭/멀티터치로 showModal()이 두 번 호출되는 것을 방지
+        state.selectedDeskIdForAssign = deskId;
+        openSecretAssignModal();
+        return;
+      }
+      if (!state.isPreAssignMode) return;
+      if (preAssignModal.open) return; // 중복 탭/멀티터치로 showModal()이 두 번 호출되는 것을 방지
+      state.selectedDeskIdForAssign = deskId;
+      openPreAssignModal();
+    }
+
+    function openPreAssignModal() {
+      studentListUI.innerHTML = '';
+      const assignedStudents = state.desks.filter(d => d.student).map(d => d.student);
+      const availableStudents = state.students.filter(s => !assignedStudents.includes(s));
+      if (availableStudents.length === 0) { studentListUI.innerHTML = '<div style="padding: 10px; color: var(--ti-text-muted); text-align:center;">남은 학생이 없습니다.</div>'; }
+      else { availableStudents.forEach(student => { const row = document.createElement('div'); row.className = 'student-row'; row.innerText = student; row.addEventListener('click', () => assignSpecificStudent(student)); studentListUI.appendChild(row); }); }
+      preAssignModal.showModal();
+    }
+
+    function assignSpecificStudent(studentName) { const desk = state.desks.find(d => d.id === state.selectedDeskIdForAssign); if (desk) { desk.student = studentName; desk.isFixed = true; } preAssignModal.close(); renderBoard(); }
+    function removePreAssign() { const desk = state.desks.find(d => d.id === state.selectedDeskIdForAssign); if (desk) { desk.student = null; desk.isFixed = false; } preAssignModal.close(); renderBoard(); }
+
+    /* =========================================
+       [비밀 선배정: 학생에게는 무작위처럼 보이지만
+        실제로는 교사가 지정한 결과가 나오도록 예약]
+       ========================================= */
+    function openSecretAssignModal() {
+      secretStudentListUI.innerHTML = '';
+      const desk = state.desks.find(d => d.id === state.selectedDeskIdForAssign);
+      // 이미 화면에 배정된 학생, 그리고 다른 자리에 비밀 배정 예약된 학생은 목록에서 제외 (중복 방지)
+      const visiblyAssigned = state.desks.filter(d => d.student).map(d => d.student);
+      const secretlyAssignedElsewhere = state.desks.filter(d => d.secretStudent && d.id !== state.selectedDeskIdForAssign).map(d => d.secretStudent);
+      const taken = [...visiblyAssigned, ...secretlyAssignedElsewhere];
+      const availableStudents = state.students.filter(s => !taken.includes(s));
+      secretAssignCurrent.innerText = (desk && desk.secretStudent) ? `현재 비밀 지정: ${desk.secretStudent}` : '아직 비밀 지정된 학생이 없습니다.';
+      if (availableStudents.length === 0) { secretStudentListUI.innerHTML = '<div style="padding: 10px; color: var(--ti-text-muted); text-align:center;">지정 가능한 학생이 없습니다.</div>'; }
+      else { availableStudents.forEach(student => { const row = document.createElement('div'); row.className = 'student-row'; row.innerText = student; row.addEventListener('click', () => assignSecretStudent(student)); secretStudentListUI.appendChild(row); }); }
+      secretAssignModal.showModal();
+    }
+
+    function assignSecretStudent(studentName) {
+      const desk = state.desks.find(d => d.id === state.selectedDeskIdForAssign);
+      if (desk) desk.secretStudent = studentName;
+      secretAssignModal.close();
+      renderBoard();
+      showToast("비밀 배정이 설정되었습니다. (학생에게는 보이지 않습니다)");
+    }
+    function removeSecretAssign() {
+      const desk = state.desks.find(d => d.id === state.selectedDeskIdForAssign);
+      if (desk) desk.secretStudent = null;
+      secretAssignModal.close();
+      renderBoard();
+      showToast("비밀 배정이 해제되었습니다.");
+    }
+
+    /* =========================================
+       [Random Assignment Animation]
+       ========================================= */
+    function disableUI(disable) {
+      [btnAddDesk, btnApplyGrid, togglePreAssign, toggleDeleteMode, btnSettings, btnRotateView].forEach(el => {
+        el.style.opacity = disable ? '0.5' : '1';
+        el.style.pointerEvents = disable ? 'none' : 'auto';
+      });
+    }
+
+    async function startRandomAssignment(isAll = true) {
+      if (state.isAnimating) return;
+      parseStudents();
+      const assignedStudents = state.desks.filter(d => d.student).map(d => d.student);
+      const unassignedDesks = state.desks.filter(d => !d.student);
+      // 비밀 배정된 학생은 해당 자리 전용으로 예약해두고, 다른 자리의 '진짜 무작위' 추첨 대상에서는 제외한다.
+      // (명단에서 이미 지워진 학생이 비밀 지정되어 있는 경우는 예약을 무시하고 일반 무작위로 처리)
+      const secretReserved = unassignedDesks
+        .filter(d => d.secretStudent && state.students.includes(d.secretStudent))
+        .map(d => d.secretStudent);
+      const availableStudents = state.students.filter(s => !assignedStudents.includes(s) && !secretReserved.includes(s));
+      if (availableStudents.length === 0 && secretReserved.length === 0) { showToast("배정할 학생이 없습니다. 명단을 확인해주세요."); return; }
+      if (unassignedDesks.length === 0) { showToast("모든 자리가 배정되었습니다."); return; }
+      if (state.isPreAssignMode) { state.isPreAssignMode = false; togglePreAssign.classList.remove('active'); }
+      if (state.isDeleteMode) { state.isDeleteMode = false; toggleDeleteMode.classList.remove('active'); canvasBoard.classList.remove('delete-mode'); }
+      if (state.isSecretAssignMode) setSecretAssignMode(false);
+      state.isAnimating = true; state.isPaused = false;
+      disableUI(true);
+      if (isAll) {
+        btnRandomAssignAll.style.display = 'none'; btnRandomAssignOne.style.display = 'none';
+        btnPauseResume.style.display = 'inline-flex';
+        btnPauseResume.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> 일시 정지`;
+        btnPauseResume.className = 'ti-btn warning';
+      } else {
+        btnRandomAssignAll.style.opacity = '0.5'; btnRandomAssignAll.style.pointerEvents = 'none';
+        btnRandomAssignOne.style.opacity = '0.5'; btnRandomAssignOne.style.pointerEvents = 'none';
+      }
+      const shuffledDesks = [...unassignedDesks].sort(() => Math.random() - 0.5);
+      const targetCount = isAll ? Math.min(shuffledDesks.length, availableStudents.length + secretReserved.length) : 1;
+      for (let i = 0; i < targetCount; i++) {
+        while (state.isPaused) { await sleep(100); if (!state.isAnimating) break; }
+        if (!state.isAnimating) break;
+        const deskData = shuffledDesks[i];
+        const deskEl = document.getElementById(`desk-${deskData.id}`);
+        const isSecretSeat = deskData.secretStudent && state.students.includes(deskData.secretStudent);
+        let finalStudent, flickerPool;
+        if (isSecretSeat) {
+          // 학생 눈에는 다른 자리와 똑같이 이름이 빠르게 지나가는 것처럼 보이지만,
+          // 마지막에 멈추는 이름은 무작위 추첨이 아니라 교사가 미리 정해둔 이름으로 고정된다.
+          finalStudent = deskData.secretStudent;
+          flickerPool = availableStudents.length > 0 ? [...availableStudents, finalStudent] : [finalStudent];
+        } else {
+          if (availableStudents.length === 0) continue; // 이론상 발생하지 않지만 안전장치
+          const randomIdx = Math.floor(Math.random() * availableStudents.length);
+          finalStudent = availableStudents[randomIdx];
+          flickerPool = availableStudents;
+        }
+        await animateSuspense(deskEl, flickerPool, finalStudent);
+        deskData.student = finalStudent;
+        if (!isSecretSeat) {
+          const idx = availableStudents.indexOf(finalStudent);
+          if (idx > -1) availableStudents.splice(idx, 1);
+        }
+        deskEl.classList.remove('shuffling'); deskEl.classList.add('assigned');
+        if (isAll) await sleep(250);
+      }
+      state.isAnimating = false; state.isPaused = false; disableUI(false);
+      btnRandomAssignAll.style.display = 'inline-flex'; btnRandomAssignAll.style.opacity = '1'; btnRandomAssignAll.style.pointerEvents = 'auto';
+      btnRandomAssignOne.style.display = 'inline-flex'; btnRandomAssignOne.style.opacity = '1'; btnRandomAssignOne.style.pointerEvents = 'auto';
+      btnPauseResume.style.display = 'none';
+    }
+
+    async function animateSuspense(deskEl, availableNames, finalName) {
+      deskEl.classList.remove('empty'); deskEl.classList.add('shuffling');
+      const cycles = 15;
+      for (let i = 0; i < cycles; i++) {
+        if (state.isPaused || !state.isAnimating) break;
+        deskEl.innerText = availableNames[Math.floor(Math.random() * availableNames.length)];
+        await sleep(50);
+      }
+      if (!state.isAnimating) return;
+      deskEl.innerText = '...'; await sleep(150); deskEl.innerText = finalName;
+    }
+
+    /* =========================================
+       [Event Listeners Setup]
+       ========================================= */
+    function attachEvents() {
+      btnAddDesk.addEventListener('click', () => {
+        if (state.isAnimating) return;
+        const newId = state.desks.length > 0 ? Math.max(...state.desks.map(d => d.id)) + 1 : 0;
+        let newX = 440, newY = 360;
+        if (state.desks.length > 0) { const lastDesk = state.desks[state.desks.length - 1]; newX = lastDesk.x + 120; newY = lastDesk.y; if (newX > 800) { newX = 120; newY = lastDesk.y + 90; } }
+        state.desks.push({ id: newId, student: null, isFixed: false, secretStudent: null, x: Math.round(newX / 40) * 40, y: Math.round(newY / 30) * 30 });
+        elTotal.value = state.desks.length; renderBoard(); showToast("좌석이 1개 추가되었습니다.");
+      });
+
+      btnPreset1.addEventListener('click', () => {
+        if (state.isAnimating) return;
+        const total = parseInt(elTotal.value) || 22; elCols.value = 6; elDivision.value = 3; elRows.value = Math.ceil(total / 6);
+        customConfirm("일반 대형(3분단)으로 배치하시겠습니까?\n기존 배치는 초기화됩니다.", () => { parseStudents(); generateCanvasDesks(); renderBoard(); });
+      });
+
+      btnPreset2.addEventListener('click', () => {
+        if (state.isAnimating) return;
+        const total = parseInt(elTotal.value) || 22; elCols.value = 5; elDivision.value = 5; elRows.value = Math.ceil(total / 5);
+        customConfirm("시험 대형(5열 단독)으로 배치하시겠습니까?\n기존 배치는 초기화됩니다.", () => { parseStudents(); generateCanvasDesks(); renderBoard(); });
+      });
+
+      btnApplyGrid.addEventListener('click', () => {
+        if (state.isAnimating) return;
+        customConfirm("현재 배치와 배정 정보가 모두 초기화됩니다. 계속하시겠습니까?", () => { parseStudents(); generateCanvasDesks(); renderBoard(); });
+      });
+
+      togglePreAssign.addEventListener('click', () => {
+        if (state.isAnimating) return;
+        state.isPreAssignMode = !state.isPreAssignMode;
+        togglePreAssign.classList.toggle('active', state.isPreAssignMode);
+        if (state.isPreAssignMode && state.isDeleteMode) { state.isDeleteMode = false; toggleDeleteMode.classList.remove('active'); canvasBoard.classList.remove('delete-mode'); }
+        if (state.isPreAssignMode && state.isSecretAssignMode) setSecretAssignMode(false);
+      });
+
+      toggleDeleteMode.addEventListener('click', () => {
+        if (state.isAnimating) return;
+        state.isDeleteMode = !state.isDeleteMode;
+        toggleDeleteMode.classList.toggle('active', state.isDeleteMode);
+        canvasBoard.classList.toggle('delete-mode', state.isDeleteMode);
+        if (state.isDeleteMode && state.isPreAssignMode) { state.isPreAssignMode = false; togglePreAssign.classList.remove('active'); }
+        if (state.isDeleteMode && state.isSecretAssignMode) setSecretAssignMode(false);
+      });
+
+      btnToggleSecretMode.addEventListener('click', () => {
+        if (state.isAnimating || state.isSecretAssignMode) return;
+        // '저장 없이 종료'를 누르면 이 시점 상태로 되돌릴 수 있도록 스냅샷을 남겨둠
+        secretAssignBackup = state.desks.map(d => ({ id: d.id, secretStudent: d.secretStudent }));
+        setSecretAssignMode(true);
+        if (state.isPreAssignMode) { state.isPreAssignMode = false; togglePreAssign.classList.remove('active'); }
+        if (state.isDeleteMode) { state.isDeleteMode = false; toggleDeleteMode.classList.remove('active'); canvasBoard.classList.remove('delete-mode'); }
+        settingsModal.close();
+        showToast("비밀 선배정 모드 시작: 좌석을 눌러 학생을 지정하세요.");
+      });
+
+      // 설정 버튼 옆의 '초기화' — 이번에 지정한 비밀 배정만 지우고 모드는 계속 유지
+      btnSecretReset.addEventListener('click', () => {
+        if (state.isAnimating) return;
+        customConfirm("지금까지 지정한 비밀 배정을 모두 초기화할까요?", () => {
+          state.desks.forEach(d => { d.secretStudent = null; });
+          renderBoard();
+          showToast("비밀 배정이 초기화되었습니다.");
+        });
+      });
+
+      // 설정 버튼 옆의 '저장 없이 종료' — 이번에 변경한 내용을 모두 되돌리고 모드 진입 전 상태로 복원
+      btnSecretCancel.addEventListener('click', () => {
+        if (state.isAnimating) return;
+        customConfirm("저장하지 않고 종료할까요? 이번에 변경한 비밀 배정 내용은 사라집니다.", () => {
+          if (secretAssignBackup) {
+            const backupMap = new Map(secretAssignBackup.map(b => [b.id, b.secretStudent]));
+            state.desks.forEach(d => { d.secretStudent = backupMap.has(d.id) ? backupMap.get(d.id) : null; });
+          }
+          secretAssignBackup = null;
+          setSecretAssignMode(false);
+          showToast("변경 사항을 저장하지 않고 종료했습니다.");
+        });
+      });
+
+      // 설정 버튼 옆의 '저장' — 비밀 선배정 설정을 마치고 모드 종료 (버튼도 함께 사라짐)
+      btnSecretSave.addEventListener('click', () => {
+        if (state.isAnimating) return;
+        secretAssignBackup = null;
+        setSecretAssignMode(false);
+        showToast("비밀 선배정이 저장되었습니다.");
+      });
+
+      btnRandomAssignAll.addEventListener('click', () => startRandomAssignment(true));
+      btnRandomAssignOne.addEventListener('click', () => startRandomAssignment(false));
+
+      btnPauseResume.addEventListener('click', () => {
+        state.isPaused = !state.isPaused;
+        if (state.isPaused) {
+          btnPauseResume.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> 배정 계속하기`;
+          btnPauseResume.className = 'ti-btn primary';
+        } else {
+          btnPauseResume.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> 일시 정지`;
+          btnPauseResume.className = 'ti-btn warning';
+        }
+      });
+
+      btnRotateView.addEventListener('click', () => { state.isTeacherView = !state.isTeacherView; canvasBoard.classList.toggle('rotated', !state.isTeacherView); });
+      btnPrint.addEventListener('click', () => window.print());
+
+      btnReset.addEventListener('click', () => {
+        if (state.isAnimating) {
+          customConfirm("배정을 강제로 중단하고 결과를 초기화하시겠습니까?", () => {
+            state.isAnimating = false; state.isPaused = false;
+            setTimeout(() => {
+              state.desks.forEach(d => { d.student = null; d.isFixed = false; });
+              renderBoard(); disableUI(false);
+              btnRandomAssignAll.style.display = 'inline-flex'; btnRandomAssignAll.style.opacity = '1'; btnRandomAssignAll.style.pointerEvents = 'auto';
+              btnRandomAssignOne.style.display = 'inline-flex'; btnRandomAssignOne.style.opacity = '1'; btnRandomAssignOne.style.pointerEvents = 'auto';
+              btnPauseResume.style.display = 'none';
+            }, 300);
+          }); return;
+        }
+        customConfirm("모든 배정 결과를 비우시겠습니까? (위치 배치는 유지됩니다)", () => { state.desks.forEach(d => { d.student = null; d.isFixed = false; }); renderBoard(); });
+      });
+
+      btnThemeToggle.addEventListener('click', () => {
+        const html = document.documentElement;
+        const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', newTheme);
+        settings.theme = newTheme;
+      });
+
+      // Settings Modal Events
+      btnSettings.addEventListener('click', openSettings);
+      btnSettingsClose.addEventListener('click', () => settingsModal.close());
+
+      modeBtnLight.addEventListener('click', () => {
+        settings.pendingTheme = 'light';
+        // Also update pending design's subtheme card
+        updateSettingsUI();
+      });
+      modeBtnDark.addEventListener('click', () => {
+        settings.pendingTheme = 'dark';
+        updateSettingsUI();
+      });
+
+      // Theme card clicks
+      document.querySelectorAll('.theme-card').forEach(card => {
+        card.addEventListener('click', () => {
+          settings.pendingDesign = card.dataset.design;
+          settings.pendingTheme = card.dataset.subtheme;
+          updateSettingsUI();
+        });
+      });
+
+      btnSettingsApply.addEventListener('click', () => {
+        applyTheme(settings.pendingDesign, settings.pendingTheme);
+        settingsModal.close();
+        const themeLabel = settings.pendingTheme === 'light' ? (settings.pendingDesign === 'glace' ? 'Light 2' : 'Light 1') : (settings.pendingDesign === 'glace' ? 'Dark 2' : 'Dark 1');
+        showToast(`테마 적용됨: ${themeLabel}`);
+      });
+
+      // Close settings on backdrop click
+      settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) settingsModal.close(); });
+
+      btnCancelPreAssign.addEventListener('click', () => preAssignModal.close());
+      btnRemovePreAssign.addEventListener('click', removePreAssign);
+      btnCancelSecretAssign.addEventListener('click', () => secretAssignModal.close());
+      btnRemoveSecretAssign.addEventListener('click', removeSecretAssign);
+      attachCanvasDragEvents();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
